@@ -21,7 +21,7 @@ create_db:
 drop_db:
     docker exec -it cicero_db_dev bash -c 'psql -U cicero -c "DROP DATABASE cicero_db_dev;"'
 
-db: init_db into_db create_db
+db: init_db create_db
 
 run_db:
 	docker start cicero_db_dev
