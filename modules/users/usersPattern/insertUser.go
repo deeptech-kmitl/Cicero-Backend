@@ -79,16 +79,14 @@ func (f *userReq) Customer() (IInsertUser, error) {
 		f.req.LastName,
 		f.req.Phone,
 	).Scan(&f.id); err != nil {
-		fmt.Println(err)
-		return nil, fmt.Errorf("insert user failed: %v", err)
-		// switch err.Error() {
-		// case "ERROR: duplicate key value violates unique constraint \"users_username_key\" (SQLSTATE 23505)":
-		// 	return nil, fmt.Errorf("username has been used")
-		// case "ERROR: duplicate key value violates unique constraint \"users_email_key\" (SQLSTATE 23505)":
-		// 	return nil, fmt.Errorf("email has been used")
-		// default:
-		// 	return nil, fmt.Errorf("insert user failed: %v", err)
-		// }
+		switch err.Error() {
+		case "ERROR: duplicate key value violates unique constraint \"User_email_key\" (SQLSTATE 23505)":
+			return nil, fmt.Errorf("email has been used")
+		case "ERROR: duplicate key value violates unique constraint \"User_phone_key\" (SQLSTATE 23505)":
+			return nil, fmt.Errorf("phone number has been used")
+		default:
+			return nil, fmt.Errorf("insert user failed: %v", err)
+		}
 	}
 	return f, nil
 }
@@ -117,16 +115,14 @@ func (f *userReq) Admin() (IInsertUser, error) {
 		f.req.LastName,
 		f.req.Phone,
 	).Scan(&f.id); err != nil {
-		fmt.Println(err)
-		return nil, fmt.Errorf("insert user failed: %v", err)
-		// switch err.Error() {
-		// case "ERROR: duplicate key value violates unique constraint \"users_username_key\" (SQLSTATE 23505)":
-		// 	return nil, fmt.Errorf("username has been used")
-		// case "ERROR: duplicate key value violates unique constraint \"users_email_key\" (SQLSTATE 23505)":
-		// 	return nil, fmt.Errorf("email has been used")
-		// default:
-		// 	return nil, fmt.Errorf("insert user failed: %v", err)
-		// }
+		switch err.Error() {
+		case "ERROR: duplicate key value violates unique constraint \"User_email_key\" (SQLSTATE 23505)":
+			return nil, fmt.Errorf("email has been used")
+		case "ERROR: duplicate key value violates unique constraint \"User_phone_key\" (SQLSTATE 23505)":
+			return nil, fmt.Errorf("phone number has been used")
+		default:
+			return nil, fmt.Errorf("insert user failed: %v", err)
+		}
 	}
 	return f, nil
 }
