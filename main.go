@@ -6,6 +6,7 @@ import (
 
 	"github.com/deeptech-kmitl/Cicero-Backend/config"
 	"github.com/deeptech-kmitl/Cicero-Backend/modules/servers"
+	"github.com/deeptech-kmitl/Cicero-Backend/pkg/databases"
 )
 
 func main() {
@@ -17,5 +18,9 @@ func main() {
 		return os.Args[1]
 	}())
 
-	servers.NewServer(cfg).Start()
+	// Initialize database
+	db := databases.DbConnect(cfg.Db())
+	defer db.Close()
+
+	servers.NewServer(cfg, db).Start()
 }

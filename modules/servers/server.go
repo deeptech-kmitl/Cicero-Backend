@@ -8,6 +8,7 @@ import (
 
 	"github.com/deeptech-kmitl/Cicero-Backend/config"
 	"github.com/gofiber/fiber/v2"
+	"github.com/jmoiron/sqlx"
 )
 
 type IServer interface {
@@ -18,10 +19,12 @@ type IServer interface {
 type server struct {
 	app *fiber.App
 	cfg config.IConfig
+	db  *sqlx.DB
 }
 
-func NewServer(cfg config.IConfig) IServer {
+func NewServer(cfg config.IConfig, db *sqlx.DB) IServer {
 	return &server{
+		db:  db,
 		cfg: cfg,
 		app: fiber.New(fiber.Config{
 			AppName:      cfg.App().Name(),
