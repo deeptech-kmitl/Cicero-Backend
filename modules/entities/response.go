@@ -1,6 +1,9 @@
 package entities
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/deeptech-kmitl/Cicero-Backend/pkg/logger"
+	"github.com/gofiber/fiber/v2"
+)
 
 type IResponse interface {
 	Success(code int, data any) IResponse
@@ -35,6 +38,7 @@ func (r *Response) Error(code int, traceId string, msg string) IResponse {
 		Msg:     msg,
 	}
 	r.IsError = true
+	logger.InitRiLogger(r.Context, &r.Data).Print().Save()
 	return r
 }
 
@@ -42,6 +46,7 @@ func (r *Response) Error(code int, traceId string, msg string) IResponse {
 func (r *Response) Success(code int, data any) IResponse {
 	r.StatusCode = code
 	r.Data = data
+	logger.InitRiLogger(r.Context, &r.Data).Print().Save()
 	return r
 }
 

@@ -27,7 +27,7 @@ CREATE TABLE "User" (
   "email" VARCHAR UNIQUE NOT NULL,
   "password" VARCHAR NOT NULL,
   "phone" VARCHAR NOT NULL UNIQUE,
-  "avatar" VARCHAR NOT NULL,
+  "avatar" VARCHAR,
   "created_at" TIMESTAMP NOT NULL DEFAULT now(),
   "updated_at" TIMESTAMP NOT NULL DEFAULT now()
 );
@@ -37,8 +37,18 @@ CREATE TABLE "Role" (
   "title" VARCHAR NOT NULL UNIQUE
 );
 
+CREATE TABLE "Oauth" (
+  "id" uuid NOT NULL UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
+  "user_id" VARCHAR NOT NULL,
+  "access_token" VARCHAR NOT NULL,
+  "created_at" TIMESTAMP NOT NULL DEFAULT now(),
+  "updated_at" TIMESTAMP NOT NULL DEFAULT now()
+);
+
+ALTER TABLE "Oauth" ADD FOREIGN KEY ("user_id") REFERENCES "User" ("id")  ON DELETE CASCADE;
 ALTER TABLE "User" ADD FOREIGN KEY ("role_id") REFERENCES "Role" ("id") ON DELETE CASCADE;
 
 CREATE TRIGGER set_updated_at_timestamp_users_table BEFORE UPDATE ON "User" FOR EACH ROW EXECUTE PROCEDURE set_updated_at_column();
+CREATE TRIGGER set_updated_at_timestamp_oauth_table BEFORE UPDATE ON "Oauth" FOR EACH ROW EXECUTE PROCEDURE set_updated_at_column();
 
 COMMIT;

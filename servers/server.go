@@ -40,12 +40,19 @@ func NewServer(cfg config.IConfig, db *sqlx.DB) IServer {
 
 func (s *server) Start() {
 	// Middleware
+	mid := InitMiddlewares(s)
+	s.app.Use(mid.Logger())
+	s.app.Use(mid.Cors())
 
 	// Module
 	api := s.app.Group("/api")
 
-	modules := NewModule(api, s)
+	modules := NewModule(api, s, mid)
 	modules.MonitorModule()
+	modules.UserModule().Init()
+
+	// if route not found
+	s.app.Use(mid.RouterCheck())
 
 	//Graceful shutdown
 	c := make(chan os.Signal, 1)

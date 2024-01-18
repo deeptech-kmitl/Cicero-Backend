@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/deeptech-kmitl/Cicero-Backend/config"
-	"github.com/deeptech-kmitl/Cicero-Backend/modules/servers"
 	"github.com/deeptech-kmitl/Cicero-Backend/pkg/databases"
+	"github.com/deeptech-kmitl/Cicero-Backend/servers"
 )
 
 func main() {
