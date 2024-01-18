@@ -13,13 +13,11 @@ import (
 type userHandlerErrCode = string
 
 const (
-	signUpCustomerErr     userHandlerErrCode = "users-001"
-	signInErr             userHandlerErrCode = "users-002"
-	refreshPassportErr    userHandlerErrCode = "users-003"
-	signOutErr            userHandlerErrCode = "users-004"
-	signUpAdminErr        userHandlerErrCode = "users-005"
-	generateAdminTokenErr userHandlerErrCode = "users-006"
-	getUserProfileErr     userHandlerErrCode = "users-007"
+	signUpCustomerErr userHandlerErrCode = "users-001"
+	signInErr         userHandlerErrCode = "users-002"
+	signOutErr        userHandlerErrCode = "users-003"
+	signUpAdminErr    userHandlerErrCode = "users-004"
+	getUserProfileErr userHandlerErrCode = "users-005"
 )
 
 type IUsersHandler interface {
@@ -65,32 +63,27 @@ func (h *usersHandler) SignUpCustomer(c *fiber.Ctx) error {
 	// Insert user
 	result, err := h.userUsecase.InsertCustomer(req)
 	if err != nil {
-		return entities.NewResponse(c).Error(
-			fiber.ErrBadRequest.Code,
-			string(signUpCustomerErr),
-			err.Error(),
-		).Res()
-		// switch err.Error() {
-		// case "username has been used":
-		// 	return entities.NewResponse(c).Error(
-		// 		fiber.ErrBadRequest.Code,
-		// 		string(signUpCustomerErr),
-		// 		err.Error(),
-		// 	).Res()
-		// case "email has been used":
-		// 	return entities.NewResponse(c).Error(
-		// 		fiber.ErrBadRequest.Code,
-		// 		string(signUpCustomerErr),
-		// 		err.Error(),
-		// 	).Res()
+		switch err.Error() {
+		case "phone number has been used":
+			return entities.NewResponse(c).Error(
+				fiber.ErrBadRequest.Code,
+				string(signUpCustomerErr),
+				err.Error(),
+			).Res()
+		case "email has been used":
+			return entities.NewResponse(c).Error(
+				fiber.ErrBadRequest.Code,
+				string(signUpCustomerErr),
+				err.Error(),
+			).Res()
 
-		// default:
-		// 	return entities.NewResponse(c).Error(
-		// 		fiber.ErrInternalServerError.Code,
-		// 		string(signUpCustomerErr),
-		// 		err.Error(),
-		// 	).Res()
-		// }
+		default:
+			return entities.NewResponse(c).Error(
+				fiber.ErrInternalServerError.Code,
+				string(signUpCustomerErr),
+				err.Error(),
+			).Res()
+		}
 	}
 
 	return entities.NewResponse(c).Success(fiber.StatusCreated, result).Res()
@@ -119,32 +112,27 @@ func (h *usersHandler) SignUpAdmin(c *fiber.Ctx) error {
 	// Insert user
 	result, err := h.userUsecase.InsertAdmin(req)
 	if err != nil {
-		return entities.NewResponse(c).Error(
-			fiber.ErrBadRequest.Code,
-			string(signUpAdminErr),
-			err.Error(),
-		).Res()
-		// switch err.Error() {
-		// case "username has been used":
-		// 	return entities.NewResponse(c).Error(
-		// 		fiber.ErrBadRequest.Code,
-		// 		string(signUpAdminErr),
-		// 		err.Error(),
-		// 	).Res()
-		// case "email has been used":
-		// 	return entities.NewResponse(c).Error(
-		// 		fiber.ErrBadRequest.Code,
-		// 		string(signUpAdminErr),
-		// 		err.Error(),
-		// 	).Res()
+		switch err.Error() {
+		case "phone number has been used":
+			return entities.NewResponse(c).Error(
+				fiber.ErrBadRequest.Code,
+				string(signUpAdminErr),
+				err.Error(),
+			).Res()
+		case "email has been used":
+			return entities.NewResponse(c).Error(
+				fiber.ErrBadRequest.Code,
+				string(signUpAdminErr),
+				err.Error(),
+			).Res()
 
-		// default:
-		// 	return entities.NewResponse(c).Error(
-		// 		fiber.ErrInternalServerError.Code,
-		// 		string(signUpCustomerErr),
-		// 		err.Error(),
-		// 	).Res()
-		// }
+		default:
+			return entities.NewResponse(c).Error(
+				fiber.ErrInternalServerError.Code,
+				string(signUpCustomerErr),
+				err.Error(),
+			).Res()
+		}
 	}
 
 	return entities.NewResponse(c).Success(fiber.StatusCreated, result).Res()

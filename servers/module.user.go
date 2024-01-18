@@ -39,7 +39,7 @@ func (m *userModule) Init() {
 	router.Post("/signup-admin", m.mid.JwtAuth(), m.mid.Authorize(2), m.handler.SignUpAdmin)
 	router.Post("/signin", m.handler.SignIn)
 	router.Post("/signout", m.handler.SignOut)
-	router.Get("/profile", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.GetUserProfile)
+	router.Get("/:user_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.GetUserProfile)
 }
 
 func (p *userModule) Repository() usersRepositories.IUsersRepository { return p.repository }
