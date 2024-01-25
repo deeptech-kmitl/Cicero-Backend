@@ -75,6 +75,7 @@ func (h *middlewaresHandler) Logger() fiber.Handler {
 	})
 }
 
+// แกะ token และตรวจสอบว่า Login อยู่หรือไม่
 func (h *middlewaresHandler) JwtAuth() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		token := strings.TrimPrefix(c.Get("Authorization"), "Bearer ")
@@ -88,11 +89,13 @@ func (h *middlewaresHandler) JwtAuth() fiber.Handler {
 		}
 
 		claims := result.Claims
-		if !h.middlewareUsecase.FindAccessToken(claims.Id, token) {
+		// check token in db
+		check := h.middlewareUsecase.FindAccessToken(claims.Id, token)
+		if !check {
 			return entities.NewResponse(c).Error(
 				fiber.ErrUnauthorized.Code,
 				string(jwtAuthErr),
-				"no permission to access",
+				"You Are Not Logged In",
 			).Res()
 		}
 

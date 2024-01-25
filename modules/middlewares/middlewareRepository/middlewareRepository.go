@@ -34,7 +34,7 @@ func (r *middlewaresRepository) FindAccessToken(userId, accessToken string) bool
 	if err := r.db.Get(&check, query, userId, accessToken); err != nil {
 		return false
 	}
-	return true
+	return check
 }
 
 func (r *middlewaresRepository) FindRole() ([]*middlewares.Role, error) {

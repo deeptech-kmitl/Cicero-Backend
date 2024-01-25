@@ -38,7 +38,7 @@ func (m *userModule) Init() {
 	router.Post("/signup", m.handler.SignUpCustomer)
 	router.Post("/signup-admin", m.mid.JwtAuth(), m.mid.Authorize(2), m.handler.SignUpAdmin)
 	router.Post("/signin", m.handler.SignIn)
-	router.Post("/signout", m.handler.SignOut)
+	router.Post("/signout", m.mid.JwtAuth(), m.handler.SignOut)
 	router.Get("/:user_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.GetUserProfile)
 }
 
