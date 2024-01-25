@@ -36,7 +36,7 @@ type filesPub struct {
 func (f *filesPub) makePublic(ctx context.Context, client *storage.Client) error {
 	acl := client.Bucket(f.bucket).Object(f.destination).ACL()
 	if err := acl.Set(ctx, storage.AllUsers, storage.RoleReader); err != nil {
-		return fmt.Errorf("ACLHandle.Set: %v", err)
+		return fmt.Errorf("ACLHandle.Set: %w", err)
 	}
 	fmt.Printf("Blob %v is now publicly accessible.\n", f.destination)
 	return nil
@@ -64,12 +64,12 @@ func (u *filesUsecase) uploadWorkers(ctx context.Context, client *storage.Client
 		wc := client.Bucket(u.cfg.App().GCPBucket()).Object(job.Destination).NewWriter(ctx)
 
 		if _, err = io.Copy(wc, buf); err != nil {
-			errs <- fmt.Errorf("io.Copy: %v", err)
+			errs <- fmt.Errorf("io.Copy: %w", err)
 			return
 		}
 		// Data can continue to be added to the file until the writer is closed.
 		if err := wc.Close(); err != nil {
-			errs <- fmt.Errorf("Writer.Close: %v", err)
+			errs <- fmt.Errorf("Writer.Close: %w", err)
 			return
 		}
 		fmt.Printf("%v uploaded to %v.\n", job.FileName, job.Destination)
@@ -95,12 +95,12 @@ func (u *filesUsecase) uploadWorkers(ctx context.Context, client *storage.Client
 }
 
 func (u *filesUsecase) UploadToGCP(req []*files.FileReq) ([]*files.FileRes, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*20)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
 	defer cancel()
 
 	client, err := storage.NewClient(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("storage.NewClient: %v", err)
+		return nil, fmt.Errorf("storage.NewClient: %w", err)
 	}
 	defer client.Close()
 
