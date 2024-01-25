@@ -50,6 +50,7 @@ func (s *server) Start() {
 	modules := NewModule(api, s, mid)
 	modules.MonitorModule()
 	modules.UserModule().Init()
+	modules.FilesModule().Init()
 
 	// if route not found
 	s.app.Use(mid.RouterCheck())

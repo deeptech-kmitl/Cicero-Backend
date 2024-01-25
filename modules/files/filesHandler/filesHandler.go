@@ -97,7 +97,7 @@ func (h *fileHandler) UploadFiles(c *fiber.Ctx) error {
 		).Res()
 	}
 
-	return entities.NewResponse(c).Success(fiber.StatusCreated, res).Res()
+	return entities.NewResponse(c).Success(fiber.StatusOK, res).Res()
 }
 
 func (h *fileHandler) DeleteFile(c *fiber.Ctx) error {

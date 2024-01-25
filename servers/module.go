@@ -11,6 +11,7 @@ import (
 type IModuleFactory interface {
 	MonitorModule()
 	UserModule() IUserModule
+	FilesModule() IFilesModule
 }
 
 type moduleFactory struct {
