@@ -1,6 +1,7 @@
 package servers
 
 import (
+	"github.com/deeptech-kmitl/Cicero-Backend/modules/files/filesUsecase"
 	"github.com/deeptech-kmitl/Cicero-Backend/modules/users/usersHandlers"
 	"github.com/deeptech-kmitl/Cicero-Backend/modules/users/usersRepositories"
 	"github.com/deeptech-kmitl/Cicero-Backend/modules/users/usersUsecases"
@@ -21,14 +22,15 @@ type userModule struct {
 }
 
 func (m *moduleFactory) UserModule() IUserModule {
-	repository := usersRepositories.UsersRepositoryHandler(m.s.db)
-	usecase := usersUsecases.UserUsecaseHandler(repository, m.s.cfg)
-	handler := usersHandlers.UsersHandler(m.s.cfg, usecase)
+	fileUsecase := filesUsecase.FilesUsecase(m.s.cfg)
+	userRepository := usersRepositories.UsersRepositoryHandler(m.s.db)
+	userUsecase := usersUsecases.UserUsecaseHandler(userRepository, m.s.cfg)
+	userHandler := usersHandlers.UsersHandler(m.s.cfg, userUsecase, fileUsecase)
 	return &userModule{
 		moduleFactory: m,
-		repository:    repository,
-		usecase:       usecase,
-		handler:       handler,
+		repository:    userRepository,
+		usecase:       userUsecase,
+		handler:       userHandler,
 	}
 }
 
@@ -40,6 +42,7 @@ func (m *userModule) Init() {
 	router.Post("/signin", m.handler.SignIn)
 	router.Post("/signout", m.mid.JwtAuth(), m.handler.SignOut)
 	router.Get("/:user_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.GetUserProfile)
+	router.Put("/:user_id", m.handler.UpdateUserProfile)
 }
 
 func (p *userModule) Repository() usersRepositories.IUsersRepository { return p.repository }

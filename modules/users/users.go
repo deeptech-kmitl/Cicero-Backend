@@ -2,6 +2,7 @@ package users
 
 import (
 	"fmt"
+	"mime/multipart"
 	"regexp"
 
 	"golang.org/x/crypto/bcrypt"
@@ -73,4 +74,21 @@ type UserClaims struct {
 
 type UserRemoveCredential struct {
 	OauthId string `db:"id" json:"oauth_id" form:"oauth_id"`
+}
+
+type UserUpdateReq struct {
+	Email     string                  `json:"email" form:"email"`
+	FirstName string                  `json:"fname" form:"fname"`
+	LastName  string                  `json:"lname" form:"lname"`
+	Phone     string                  `json:"phone" form:"phone"`
+	Avatar    []*multipart.FileHeader `json:"avatar" form:"avatar"`
+}
+
+type UserUpdate struct {
+	Id        string `db:"id" json:"id"`
+	Email     string `db:"email" json:"email"`
+	FirstName string `db:"fname" json:"fname"`
+	LastName  string `db:"lname" json:"lname"`
+	Phone     string `db:"phone" json:"phone"`
+	Avatar    string `db:"avatar" json:"avatar"`
 }

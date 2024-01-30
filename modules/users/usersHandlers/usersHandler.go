@@ -1,23 +1,30 @@
 package usersHandlers
 
 import (
+	"fmt"
+	"math"
+	"path/filepath"
 	"strings"
 
 	"github.com/deeptech-kmitl/Cicero-Backend/config"
 	"github.com/deeptech-kmitl/Cicero-Backend/modules/entities"
+	"github.com/deeptech-kmitl/Cicero-Backend/modules/files"
+	"github.com/deeptech-kmitl/Cicero-Backend/modules/files/filesUsecase"
 	"github.com/deeptech-kmitl/Cicero-Backend/modules/users"
 	"github.com/deeptech-kmitl/Cicero-Backend/modules/users/usersUsecases"
+	"github.com/deeptech-kmitl/Cicero-Backend/pkg/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
 type userHandlerErrCode = string
 
 const (
-	signUpCustomerErr userHandlerErrCode = "users-001"
-	signInErr         userHandlerErrCode = "users-002"
-	signOutErr        userHandlerErrCode = "users-003"
-	signUpAdminErr    userHandlerErrCode = "users-004"
-	getUserProfileErr userHandlerErrCode = "users-005"
+	signUpCustomerErr    userHandlerErrCode = "users-001"
+	signInErr            userHandlerErrCode = "users-002"
+	signOutErr           userHandlerErrCode = "users-003"
+	signUpAdminErr       userHandlerErrCode = "users-004"
+	getUserProfileErr    userHandlerErrCode = "users-005"
+	updateUserProfileErr userHandlerErrCode = "users-006"
 )
 
 type IUsersHandler interface {
@@ -26,17 +33,20 @@ type IUsersHandler interface {
 	SignIn(c *fiber.Ctx) error
 	SignOut(c *fiber.Ctx) error
 	GetUserProfile(c *fiber.Ctx) error
+	UpdateUserProfile(c *fiber.Ctx) error
 }
 
 type usersHandler struct {
 	cfg         config.IConfig
 	userUsecase usersUsecases.IUserUsecase
+	fileUsecase filesUsecase.IFilesUsecase
 }
 
-func UsersHandler(cfg config.IConfig, UserUsecase usersUsecases.IUserUsecase) IUsersHandler {
+func UsersHandler(cfg config.IConfig, UserUsecase usersUsecases.IUserUsecase, fileUsecase filesUsecase.IFilesUsecase) IUsersHandler {
 	return &usersHandler{
 		cfg:         cfg,
 		userUsecase: UserUsecase,
+		fileUsecase: fileUsecase,
 	}
 }
 
@@ -206,4 +216,116 @@ func (h *usersHandler) GetUserProfile(c *fiber.Ctx) error {
 	}
 
 	return entities.NewResponse(c).Success(fiber.StatusOK, result).Res()
+}
+
+func (h *usersHandler) UpdateUserProfile(c *fiber.Ctx) error {
+	avatarFile := make([]*files.FileReq, 0)
+	userId := strings.Trim(c.Params("user_id"), " ")
+
+	form, err := c.MultipartForm()
+	if err != nil {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(updateUserProfileErr),
+			err.Error(),
+		).Res()
+	}
+
+	email := ""
+	if values, exists := form.Value["email"]; exists && len(values) > 0 {
+		email = values[0]
+	}
+
+	lastName := ""
+	if values, exists := form.Value["lname"]; exists && len(values) > 0 {
+		lastName = values[0]
+	}
+
+	firstName := ""
+	if values, exists := form.Value["fname"]; exists && len(values) > 0 {
+		firstName = values[0]
+	}
+
+	phone := ""
+	if values, exists := form.Value["phone"]; exists && len(values) > 0 {
+		phone = values[0]
+	}
+
+	// avatar := make([]*multipart.FileHeader, 0)
+	avatarUrl := ""
+	if avatar, exists := form.File["avatar"]; exists {
+		// avatar = file
+
+		if len(avatar) > 1 {
+			return entities.NewResponse(c).Error(
+				fiber.ErrBadRequest.Code,
+				string(updateUserProfileErr),
+				"avatar must be one file",
+			).Res()
+		}
+
+		// // files ext validation
+		extMap := map[string]string{
+			"png":  "png",
+			"jpg":  "jpg",
+			"jpeg": "jpeg",
+		}
+
+		// check file extension
+		ext := strings.TrimPrefix(filepath.Ext(avatar[0].Filename), ".")
+		if extMap[ext] != ext || extMap[ext] == "" {
+			return entities.NewResponse(c).Error(
+				fiber.ErrBadRequest.Code,
+				string(updateUserProfileErr),
+				"invalid file extension",
+			).Res()
+		}
+		// 	// check file size
+		if avatar[0].Size > int64(h.cfg.App().FileLimit()) {
+			return entities.NewResponse(c).Error(
+				fiber.ErrBadRequest.Code,
+				string(updateUserProfileErr),
+				fmt.Sprintf("file size must less than %d MB", int(math.Ceil(float64(h.cfg.App().FileLimit())/math.Pow(1024, 2)))),
+			).Res()
+		}
+
+		filename := utils.RandFileName(ext)
+		avatarFile = append(avatarFile, &files.FileReq{
+			File:        avatar[0],
+			Destination: fmt.Sprintf("%s/%s", userId, filename),
+			FileName:    filename,
+			Extension:   ext,
+		})
+
+		result, err := h.fileUsecase.UploadToGCP(avatarFile)
+		if err != nil {
+			return entities.NewResponse(c).Error(
+				fiber.ErrInternalServerError.Code,
+				string(updateUserProfileErr),
+				err.Error(),
+			).Res()
+		}
+
+		avatarUrl = result[0].Url
+	}
+
+	req := &users.UserUpdate{
+		Id:        userId,
+		Avatar:    avatarUrl,
+		FirstName: firstName,
+		LastName:  lastName,
+		Email:     email,
+		Phone:     phone,
+	}
+
+	res, err := h.userUsecase.UpdateUserProfile(req)
+	if err != nil {
+		return entities.NewResponse(c).Error(
+			fiber.ErrInternalServerError.Code,
+			string(updateUserProfileErr),
+			err.Error(),
+		).Res()
+	}
+
+	return entities.NewResponse(c).Success(fiber.StatusOK, res).Res()
 }

@@ -3,6 +3,7 @@ package usersRepositories
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/deeptech-kmitl/Cicero-Backend/modules/users"
@@ -16,6 +17,7 @@ type IUsersRepository interface {
 	InsertOauth(req *users.UserPassport) error
 	GetProfile(userId string) (*users.User, error)
 	DeleteOauth(oauthId string) error
+	UpdateProfile(req *users.UserUpdate) error
 }
 
 type usersRepository struct {
@@ -122,6 +124,82 @@ func (r *usersRepository) DeleteOauth(oauthId string) error {
 
 	if _, err := r.db.ExecContext(ctx, query, oauthId); err != nil {
 		return fmt.Errorf("oauth not found")
+	}
+	return nil
+}
+
+func (r *usersRepository) UpdateProfile(req *users.UserUpdate) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	queryWhereStack := make([]string, 0)
+	values := make([]any, 0)
+	lastIndex := 1
+
+	query := `
+	UPDATE "User" SET`
+
+	if req.FirstName != "" {
+		values = append(values, req.FirstName)
+
+		queryWhereStack = append(queryWhereStack, fmt.Sprintf(`
+		"fname" = $%d?`, lastIndex))
+
+		lastIndex++
+	}
+
+	if req.LastName != "" {
+		values = append(values, req.LastName)
+
+		queryWhereStack = append(queryWhereStack, fmt.Sprintf(`
+		"lname" = $%d?`, lastIndex))
+
+		lastIndex++
+	}
+
+	if req.Email != "" {
+		values = append(values, req.Email)
+
+		queryWhereStack = append(queryWhereStack, fmt.Sprintf(`
+		"email" = $%d?`, lastIndex))
+
+		lastIndex++
+	}
+
+	if req.Phone != "" {
+		values = append(values, req.Phone)
+
+		queryWhereStack = append(queryWhereStack, fmt.Sprintf(`
+		"phone" = $%d?`, lastIndex))
+
+		lastIndex++
+	}
+
+	if req.Avatar != "" {
+		values = append(values, req.Avatar)
+
+		queryWhereStack = append(queryWhereStack, fmt.Sprintf(`
+		"avatar" = $%d?`, lastIndex))
+
+		lastIndex++
+	}
+
+	values = append(values, req.Id)
+
+	queryClose := fmt.Sprintf(`
+	WHERE "id" = $%d;`, lastIndex)
+
+	for i := range queryWhereStack {
+		if i != len(queryWhereStack)-1 {
+			query += strings.Replace(queryWhereStack[i], "?", ",", 1)
+		} else {
+			query += strings.Replace(queryWhereStack[i], "?", "", 1)
+		}
+	}
+	query += queryClose
+
+	if _, err := r.db.ExecContext(ctx, query, values...); err != nil {
+		return fmt.Errorf("update profile user failed: %v", err)
 	}
 	return nil
 }
