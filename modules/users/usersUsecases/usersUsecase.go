@@ -18,6 +18,7 @@ type IUserUsecase interface {
 	GetUserProfile(userId string) (*users.User, error)
 	UpdateUserProfile(req *users.UserUpdate) (*users.User, error)
 	AddWishlist(userId, prodId string)  error
+	RemoveWishlist(userId, prodId string)  error
 }
 
 type UserUsecase struct {
@@ -133,6 +134,14 @@ func (u *UserUsecase) UpdateUserProfile(req *users.UserUpdate) (*users.User, err
 
 func (u *UserUsecase) AddWishlist(userId, prodId string)  error {
 	if err := u.usersRepository.AddWishlist(userId, prodId); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *UserUsecase) RemoveWishlist(userId, prodId string)  error {
+	if err := u.usersRepository.RemoveWishlist(userId, prodId); err != nil {
 		return err
 	}
 

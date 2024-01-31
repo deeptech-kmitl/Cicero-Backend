@@ -26,6 +26,7 @@ const (
 	getUserProfileErr    userHandlerErrCode = "users-005"
 	updateUserProfileErr userHandlerErrCode = "users-006"
 	addWishlistErr 		 userHandlerErrCode = "users-007"
+	removeWishlistErr    userHandlerErrCode = "users-008"
 )
 
 type IUsersHandler interface {
@@ -338,6 +339,7 @@ func (h *usersHandler) AddWishlist(c *fiber.Ctx) error {
 	prodId := strings.Trim(c.Params("product_id"), " ")
 
 	//must do first 
+	// check if it is already add into wishlist
 	// check product is exist or not
 	// didn't implement yet
 
@@ -367,6 +369,50 @@ func (h *usersHandler) AddWishlist(c *fiber.Ctx) error {
 		return entities.NewResponse(c).Error(
 			fiber.ErrInternalServerError.Code,
 			string(addWishlistErr),
+			err.Error(),
+		).Res()
+	}
+
+	return entities.NewResponse(c).Success(fiber.StatusOK, "add wishlist").Res() 
+
+}
+
+
+func (h *usersHandler) RemoveWishlist(c *fiber.Ctx) error {
+	userId := strings.Trim(c.Params("user_id"), " ")
+	prodId := strings.Trim(c.Params("product_id"), " ")
+
+	//must do first 
+	// check if it is already add into wishlist
+	// check product is exist or not
+	// didn't implement yet
+
+
+	// check user is exist or not
+	_, err := h.userUsecase.GetUserProfile(userId)
+	if err != nil {
+		switch err.Error() {
+		case "get user failed: sql: no rows in result set":
+			return entities.NewResponse(c).Error(
+				fiber.ErrBadRequest.Code,
+				string(removeWishlistErr),
+				err.Error(),
+			).Res()
+		default:
+			return entities.NewResponse(c).Error(
+				fiber.ErrInternalServerError.Code,
+				string(removeWishlistErr),
+				err.Error(),
+			).Res()
+
+		}
+
+	}
+
+	if err := h.userUsecase.RemoveWishlist(userId, prodId); err != nil {
+		return entities.NewResponse(c).Error(
+			fiber.ErrInternalServerError.Code,
+			string(removeWishlistErr),
 			err.Error(),
 		).Res()
 	}

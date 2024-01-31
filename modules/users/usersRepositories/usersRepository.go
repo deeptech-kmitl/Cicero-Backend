@@ -19,6 +19,7 @@ type IUsersRepository interface {
 	DeleteOauth(oauthId string) error
 	UpdateProfile(req *users.UserUpdate) error
 	AddWishlist(userId, prodId string) error
+	RemoveWishlist(userId, prodId string) error
 }
 
 type usersRepository struct {
@@ -221,4 +222,20 @@ func (r *usersRepository) AddWishlist(userId, prodId string) error {
 	}
 	return nil
 
+}
+
+func (r *usersRepository) RemoveWishlist(userId, prodId string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	query := `
+	DELETE FROM "Wishlist"
+	WHERE "user_id" = $1
+	AND "product_id" = $2
+	`
+	
+	if _, err := r.db.ExecContext(ctx, query, userId, prodId); err != nil {
+		return fmt.Errorf("remove wishlist failed: %v", err)
+	}
+	return nil
 }
