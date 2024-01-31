@@ -43,6 +43,7 @@ func (m *userModule) Init() {
 	router.Post("/signout", m.mid.JwtAuth(), m.handler.SignOut)
 	router.Get("/:user_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.GetUserProfile)
 	router.Put("/:user_id", m.handler.UpdateUserProfile)
+	// router.Post("/:user_id/wishlist/:product_id", m.handler.)
 }
 
 func (p *userModule) Repository() usersRepositories.IUsersRepository { return p.repository }

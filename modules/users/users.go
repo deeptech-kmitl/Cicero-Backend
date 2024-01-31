@@ -92,3 +92,11 @@ type UserUpdate struct {
 	Phone     string `db:"phone" json:"phone"`
 	Avatar    string `db:"avatar" json:"avatar"`
 }
+
+
+type WishlistRes struct {
+	Url string `db:"url" json:"url"`
+	ProductTitle string `db:"product_title" json:"product_title"`
+	ProductPrice string `db:"product_price" json:"product_price"`
+}
+

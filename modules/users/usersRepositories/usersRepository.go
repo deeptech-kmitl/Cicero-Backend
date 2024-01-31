@@ -18,6 +18,7 @@ type IUsersRepository interface {
 	GetProfile(userId string) (*users.User, error)
 	DeleteOauth(oauthId string) error
 	UpdateProfile(req *users.UserUpdate) error
+	AddWishlist(userId, prodId string) error
 }
 
 type usersRepository struct {
@@ -202,4 +203,22 @@ func (r *usersRepository) UpdateProfile(req *users.UserUpdate) error {
 		return fmt.Errorf("update profile user failed: %v", err)
 	}
 	return nil
+}
+
+
+func (r *usersRepository) AddWishlist(userId, prodId string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	query := `
+	INSERT INTO "Wishlist" (
+		"user_id",
+		"product_id"
+	VALUES ($1, $2);`
+
+	if _, err := r.db.ExecContext(ctx, query, userId, prodId); err != nil {
+		return fmt.Errorf("add wishlist failed: %v", err)
+	}
+	return nil
+
 }
