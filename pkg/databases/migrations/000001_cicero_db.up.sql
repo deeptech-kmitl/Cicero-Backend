@@ -50,7 +50,7 @@ CREATE TABLE "Wishlist" (
   "id" uuid NOT NULL UNIQUE PRIMARY KEY DEFAULT uuid_generate_v4(),
   "user_id" VARCHAR NOT NULL,
   "product_id" VARCHAR NOT NULL,
-  "created_at" TIMESTAMP NOT NULL DEFAULT now(),
+  "created_at" TIMESTAMP NOT NULL DEFAULT now()
 );
 
 CREATE TABLE "Product" (

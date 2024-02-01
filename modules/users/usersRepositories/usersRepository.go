@@ -20,6 +20,7 @@ type IUsersRepository interface {
 	UpdateProfile(req *users.UserUpdate) error
 	AddWishlist(userId, prodId string) error
 	RemoveWishlist(userId, prodId string) error
+	CheckWishlist(userId, prodId string) (bool, error)
 }
 
 type usersRepository struct {
@@ -206,7 +207,6 @@ func (r *usersRepository) UpdateProfile(req *users.UserUpdate) error {
 	return nil
 }
 
-
 func (r *usersRepository) AddWishlist(userId, prodId string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -215,10 +215,18 @@ func (r *usersRepository) AddWishlist(userId, prodId string) error {
 	INSERT INTO "Wishlist" (
 		"user_id",
 		"product_id"
-	VALUES ($1, $2);`
+	)
+	VALUES ($1, $2);
+	`
 
 	if _, err := r.db.ExecContext(ctx, query, userId, prodId); err != nil {
-		return fmt.Errorf("add wishlist failed: %v", err)
+		switch err.Error() {
+		case "ERROR: insert or update on table \"Wishlist\" violates foreign key constraint \"Wishlist_product_id_fkey\" (SQLSTATE 23503)":
+			return fmt.Errorf("product not found")
+		default:
+			return fmt.Errorf("add wishlist failed: %v", err)
+		}
+
 	}
 	return nil
 
@@ -233,9 +241,24 @@ func (r *usersRepository) RemoveWishlist(userId, prodId string) error {
 	WHERE "user_id" = $1
 	AND "product_id" = $2
 	`
-	
+
 	if _, err := r.db.ExecContext(ctx, query, userId, prodId); err != nil {
 		return fmt.Errorf("remove wishlist failed: %v", err)
 	}
 	return nil
+}
+
+func (r *usersRepository) CheckWishlist(userId, prodId string) (bool, error) {
+	query := `
+	SELECT
+		(CASE WHEN COUNT(*) = 1 THEN TRUE ELSE FALSE END)
+	FROM "Wishlist"
+	WHERE "user_id" = $1
+	AND "product_id" = $2;`
+
+	var check bool
+	if err := r.db.Get(&check, query, userId, prodId); err != nil {
+		return false, fmt.Errorf("check wishlist failed: %v", err)
+	}
+	return check, nil
 }

@@ -17,8 +17,7 @@ type IUserUsecase interface {
 	DeleteOauth(oauthId string) error
 	GetUserProfile(userId string) (*users.User, error)
 	UpdateUserProfile(req *users.UserUpdate) (*users.User, error)
-	AddWishlist(userId, prodId string)  error
-	RemoveWishlist(userId, prodId string)  error
+	Wishlist(userId, prodId string) (string, error)
 }
 
 type UserUsecase struct {
@@ -132,18 +131,25 @@ func (u *UserUsecase) UpdateUserProfile(req *users.UserUpdate) (*users.User, err
 
 }
 
-func (u *UserUsecase) AddWishlist(userId, prodId string)  error {
-	if err := u.usersRepository.AddWishlist(userId, prodId); err != nil {
-		return err
+func (u *UserUsecase) Wishlist(userId, prodId string) (string, error) {
+	var result string
+	// check if it is already add into wishlist or not
+	check, err := u.usersRepository.CheckWishlist(userId, prodId)
+	if err != nil {
+		return "", err
 	}
 
-	return nil
-}
-
-func (u *UserUsecase) RemoveWishlist(userId, prodId string)  error {
-	if err := u.usersRepository.RemoveWishlist(userId, prodId); err != nil {
-		return err
+	if check {
+		if err := u.usersRepository.RemoveWishlist(userId, prodId); err != nil {
+			return "", err
+		}
+		result = "Removed"
+	} else {
+		if err := u.usersRepository.AddWishlist(userId, prodId); err != nil {
+			return "", err
+		}
+		result = "Added"
 	}
 
-	return nil
+	return result, nil
 }
