@@ -2,6 +2,7 @@ package usersRepositories
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -21,6 +22,7 @@ type IUsersRepository interface {
 	AddWishlist(userId, prodId string) error
 	RemoveWishlist(userId, prodId string) error
 	CheckWishlist(userId, prodId string) (bool, error)
+	FindWishlist(userId string) (*users.WishlistRes, error)
 }
 
 type usersRepository struct {
@@ -261,4 +263,44 @@ func (r *usersRepository) CheckWishlist(userId, prodId string) (bool, error) {
 		return false, fmt.Errorf("check wishlist failed: %v", err)
 	}
 	return check, nil
+}
+
+func (r *usersRepository) FindWishlist(userId string) (*users.WishlistRes, error) {
+	query := `
+	SELECT
+		COALESCE(array_to_json(array_agg("wishlist")), '[]'::json)
+	FROM (
+		SELECT
+			"p"."product_title",
+			"p"."product_price",
+			(
+				SELECT
+					COALESCE(array_to_json(array_agg("it")), '[]'::json)
+				FROM (
+					SELECT
+						"i"."id",
+						"i"."filename",
+						"i"."url"
+					FROM "Image" "i"
+					WHERE "i"."product_id" = "p"."id"
+				) AS "it"
+			) AS "images"
+		FROM
+			"Wishlist" wl
+		JOIN "Product" p ON wl."product_id" = p."id"
+		WHERE wl."user_id" = $1
+	) AS "wishlist";
+	`
+	WishlistBytes := make([]byte, 0)
+	if err := r.db.Get(&WishlistBytes, query, userId); err != nil {
+		return nil, fmt.Errorf("get wishlist failed: %v", err)
+	}
+
+	wishList := make(users.WishlistRes, 0)
+	if err := json.Unmarshal(WishlistBytes, &wishList); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal wishlist: %v", err)
+	}
+
+	return &wishList, nil
+
 }

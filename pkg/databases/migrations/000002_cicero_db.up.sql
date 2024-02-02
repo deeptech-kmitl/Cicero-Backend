@@ -28,4 +28,17 @@ VALUES
   ('Backpack', '29.99', 'Red', 'Female', 'Durable backpack with multiple compartments', 'N/A', 'Accessories'),
   ('T-shirt', '19.99', 'Green', 'Male', 'Casual cotton t-shirt for everyday wear', 'M', 'Apparel');
 
+INSERT INTO "Image" ("product_id", "url", "filename")
+VALUES
+  ('P000001', 'https://example.com/running-shoes.jpg', 'running-shoes.jpg'),
+  ('P000002', 'https://example.com/smartphone.jpg', 'smartphone.jpg'),
+  ('P000003', 'https://example.com/backpack.jpg', 'backpack.jpg'),
+  ('P000004', 'https://example.com/t-shirt.jpg', 't-shirt.jpg');
+
+INSERT INTO "Wishlist" ("user_id", "product_id")
+VALUES
+  ('U000002', 'P000001'),
+  ('U000002', 'P000002');
+
+
 COMMIT;

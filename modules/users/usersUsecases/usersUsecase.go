@@ -18,6 +18,7 @@ type IUserUsecase interface {
 	GetUserProfile(userId string) (*users.User, error)
 	UpdateUserProfile(req *users.UserUpdate) (*users.User, error)
 	Wishlist(userId, prodId string) (string, error)
+	GetWishlist(userId string) (*users.WishlistRes, error)
 }
 
 type UserUsecase struct {
@@ -151,5 +152,13 @@ func (u *UserUsecase) Wishlist(userId, prodId string) (string, error) {
 		result = "Added"
 	}
 
+	return result, nil
+}
+
+func (u *UserUsecase) GetWishlist(userId string) (*users.WishlistRes, error) {
+	result, err := u.usersRepository.FindWishlist(userId)
+	if err != nil {
+		return nil, err
+	}
 	return result, nil
 }

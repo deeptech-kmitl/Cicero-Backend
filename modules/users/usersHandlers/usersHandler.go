@@ -26,6 +26,7 @@ const (
 	getUserProfileErr    userHandlerErrCode = "users-005"
 	updateUserProfileErr userHandlerErrCode = "users-006"
 	WishlistErr          userHandlerErrCode = "users-007"
+	GetWishlistErr       userHandlerErrCode = "users-008"
 )
 
 type IUsersHandler interface {
@@ -36,6 +37,7 @@ type IUsersHandler interface {
 	GetUserProfile(c *fiber.Ctx) error
 	UpdateUserProfile(c *fiber.Ctx) error
 	Wishlist(c *fiber.Ctx) error
+	GetWishlist(c *fiber.Ctx) error
 }
 
 type usersHandler struct {
@@ -341,6 +343,22 @@ func (h *usersHandler) Wishlist(c *fiber.Ctx) error {
 		return entities.NewResponse(c).Error(
 			fiber.ErrBadRequest.Code,
 			string(WishlistErr),
+			err.Error(),
+		).Res()
+	}
+
+	return entities.NewResponse(c).Success(fiber.StatusOK, result).Res()
+
+}
+
+func (h *usersHandler) GetWishlist(c *fiber.Ctx) error {
+	userId := strings.Trim(c.Params("user_id"), " ")
+
+	result, err := h.userUsecase.GetWishlist(userId)
+	if err != nil {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(GetWishlistErr),
 			err.Error(),
 		).Res()
 	}

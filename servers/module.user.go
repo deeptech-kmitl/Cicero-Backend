@@ -44,7 +44,7 @@ func (m *userModule) Init() {
 	router.Get("/:user_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.GetUserProfile)
 	router.Put("/:user_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.UpdateUserProfile)
 	router.Post("/:user_id/wishlist/:product_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.Wishlist)
-	// router.Delete("/:user_id/wishlist/:product_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.RemoveWishlist)
+	router.Get("/wishlist/:user_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.GetWishlist)
 }
 
 func (p *userModule) Repository() usersRepositories.IUsersRepository { return p.repository }

@@ -93,10 +93,16 @@ type UserUpdate struct {
 	Avatar    string `db:"avatar" json:"avatar"`
 }
 
+type WishlistRes []*ProductRes
 
-type WishlistRes struct {
-	Url string `db:"url" json:"url"`
-	ProductTitle string `db:"product_title" json:"product_title"`
-	ProductPrice string `db:"product_price" json:"product_price"`
+type ProductRes struct {
+	ProductTitle string      `db:"product_title" json:"product_title"`
+	ProductPrice string      `db:"product_price" json:"product_price"`
+	Images       []*ImageRes `json:"images"`
 }
 
+type ImageRes struct {
+	Id       string `db:"id" json:"id"`
+	Url      string `db:"url" json:"url"`
+	Filename string `db:"filename" json:"filename"`
+}
