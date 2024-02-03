@@ -23,8 +23,8 @@ type userModule struct {
 
 func (m *moduleFactory) UserModule() IUserModule {
 	fileUsecase := filesUsecase.FilesUsecase(m.s.cfg)
-	userRepository := usersRepositories.UsersRepositoryHandler(m.s.db)
-	userUsecase := usersUsecases.UserUsecaseHandler(userRepository, m.s.cfg)
+	userRepository := usersRepositories.UsersRepository(m.s.db)
+	userUsecase := usersUsecases.UserUsecase(userRepository, m.s.cfg)
 	userHandler := usersHandlers.UsersHandler(m.s.cfg, userUsecase, fileUsecase)
 	return &userModule{
 		moduleFactory: m,
@@ -45,6 +45,8 @@ func (m *userModule) Init() {
 	router.Put("/:user_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.UpdateUserProfile)
 	router.Post("/:user_id/wishlist/:product_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.Wishlist)
 	router.Get("/wishlist/:user_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.GetWishlist)
+	router.Post("/cart/:user_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.AddCart)
+	router.Delete("/cart/:user_id/:product_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.RemoveCart)
 }
 
 func (p *userModule) Repository() usersRepositories.IUsersRepository { return p.repository }

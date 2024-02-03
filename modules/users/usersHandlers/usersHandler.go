@@ -27,6 +27,8 @@ const (
 	updateUserProfileErr userHandlerErrCode = "users-006"
 	WishlistErr          userHandlerErrCode = "users-007"
 	GetWishlistErr       userHandlerErrCode = "users-008"
+	AddCartErr           userHandlerErrCode = "users-009"
+	RemoveCartErr        userHandlerErrCode = "users-010"
 )
 
 type IUsersHandler interface {
@@ -38,6 +40,8 @@ type IUsersHandler interface {
 	UpdateUserProfile(c *fiber.Ctx) error
 	Wishlist(c *fiber.Ctx) error
 	GetWishlist(c *fiber.Ctx) error
+	AddCart(c *fiber.Ctx) error
+	RemoveCart(c *fiber.Ctx) error
 }
 
 type usersHandler struct {
@@ -365,4 +369,43 @@ func (h *usersHandler) GetWishlist(c *fiber.Ctx) error {
 
 	return entities.NewResponse(c).Success(fiber.StatusOK, result).Res()
 
+}
+
+func (h *usersHandler) AddCart(c *fiber.Ctx) error {
+	req := new(users.AddCartReq)
+
+	if err := c.BodyParser(req); err != nil {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(AddCartErr),
+			err.Error(),
+		).Res()
+	}
+
+	result, err := h.userUsecase.AddCart(req)
+	if err != nil {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(AddCartErr),
+			err.Error(),
+		).Res()
+	}
+
+	return entities.NewResponse(c).Success(fiber.StatusOK, result).Res()
+}
+
+func (h *usersHandler) RemoveCart(c *fiber.Ctx) error {
+	userId := strings.Trim(c.Params("user_id"), " ")
+	prodId := strings.Trim(c.Params("product_id"), " ")
+
+	result, err := h.userUsecase.RemoveCart(userId, prodId)
+	if err != nil {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(RemoveCartErr),
+			err.Error(),
+		).Res()
+	}
+
+	return entities.NewResponse(c).Success(fiber.StatusOK, result).Res()
 }

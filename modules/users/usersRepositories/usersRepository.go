@@ -23,13 +23,17 @@ type IUsersRepository interface {
 	RemoveWishlist(userId, prodId string) error
 	CheckWishlist(userId, prodId string) (bool, error)
 	FindWishlist(userId string) (*users.WishlistRes, error)
+	CheckCart(userId, prodId string) (bool, error)
+	AddCart(req *users.AddCartReq) error
+	AddCartAgain(userId, prodId string) error
+	RemoveCart(userId, prodId string) error
 }
 
 type usersRepository struct {
 	db *sqlx.DB
 }
 
-func UsersRepositoryHandler(db *sqlx.DB) IUsersRepository {
+func UsersRepository(db *sqlx.DB) IUsersRepository {
 	return &usersRepository{
 		db: db,
 	}
@@ -271,6 +275,7 @@ func (r *usersRepository) FindWishlist(userId string) (*users.WishlistRes, error
 		COALESCE(array_to_json(array_agg("wishlist")), '[]'::json)
 	FROM (
 		SELECT
+			"p"."id",
 			"p"."product_title",
 			"p"."product_price",
 			(
@@ -303,4 +308,77 @@ func (r *usersRepository) FindWishlist(userId string) (*users.WishlistRes, error
 
 	return &wishList, nil
 
+}
+
+func (r *usersRepository) AddCart(req *users.AddCartReq) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	query := `
+	INSERT INTO "Cart" (
+		"user_id",
+		"product_id",
+		"size"
+	)
+	VALUES ($1, $2, $3);
+	`
+
+	if _, err := r.db.ExecContext(ctx, query, req.UserId, req.ProductId, req.Size); err != nil {
+		switch err.Error() {
+		case "ERROR: insert or update on table \"Cart\" violates foreign key constraint \"Cart_product_id_fkey\" (SQLSTATE 23503)":
+			return fmt.Errorf("product not found")
+		default:
+			return fmt.Errorf("add cart failed: %v", err)
+		}
+
+	}
+	return nil
+}
+
+func (r *usersRepository) RemoveCart(userId, prodId string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	query := `
+	DELETE FROM "Cart"
+	WHERE "user_id" = $1
+	AND "product_id" = $2
+	`
+
+	if _, err := r.db.ExecContext(ctx, query, userId, prodId); err != nil {
+		return fmt.Errorf("remove cart failed: %v", err)
+	}
+	return nil
+}
+
+func (r *usersRepository) CheckCart(userId, prodId string) (bool, error) {
+	query := `
+	SELECT
+		(CASE WHEN COUNT(*) = 1 THEN TRUE ELSE FALSE END)
+	FROM "Cart"
+	WHERE "user_id" = $1
+	AND "product_id" = $2;`
+
+	var check bool
+	if err := r.db.Get(&check, query, userId, prodId); err != nil {
+		return false, fmt.Errorf("check cart failed: %v", err)
+	}
+	return check, nil
+}
+
+func (r *usersRepository) AddCartAgain(userId, prodId string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	query := `
+	UPDATE "Cart"
+	SET "qty" = "qty" + 1
+	WHERE "user_id" = $1
+	AND "product_id" = $2;
+	`
+	if _, err := r.db.ExecContext(ctx, query, userId, prodId); err != nil {
+		return fmt.Errorf("add cart again failed: %v", err)
+	}
+
+	return nil
 }

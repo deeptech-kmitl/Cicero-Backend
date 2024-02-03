@@ -19,21 +19,23 @@ type IUserUsecase interface {
 	UpdateUserProfile(req *users.UserUpdate) (*users.User, error)
 	Wishlist(userId, prodId string) (string, error)
 	GetWishlist(userId string) (*users.WishlistRes, error)
+	AddCart(req *users.AddCartReq) (string, error)
+	RemoveCart(userId, prodId string) (string, error)
 }
 
-type UserUsecase struct {
+type userUsecase struct {
 	cfg             config.IConfig
 	usersRepository usersRepositories.IUsersRepository
 }
 
-func UserUsecaseHandler(usersRepository usersRepositories.IUsersRepository, cfg config.IConfig) IUserUsecase {
-	return &UserUsecase{
+func UserUsecase(usersRepository usersRepositories.IUsersRepository, cfg config.IConfig) IUserUsecase {
+	return &userUsecase{
 		usersRepository: usersRepository,
 		cfg:             cfg,
 	}
 }
 
-func (u *UserUsecase) InsertCustomer(req *users.UserRegisterReq) (*users.User, error) {
+func (u *userUsecase) InsertCustomer(req *users.UserRegisterReq) (*users.User, error) {
 	//hashing password
 	if err := req.BcryptHashing(); err != nil {
 		return nil, err
@@ -46,7 +48,7 @@ func (u *UserUsecase) InsertCustomer(req *users.UserRegisterReq) (*users.User, e
 	return result, nil
 }
 
-func (u *UserUsecase) InsertAdmin(req *users.UserRegisterReq) (*users.User, error) {
+func (u *userUsecase) InsertAdmin(req *users.UserRegisterReq) (*users.User, error) {
 	//hashing password
 	if err := req.BcryptHashing(); err != nil {
 		return nil, err
@@ -59,7 +61,7 @@ func (u *UserUsecase) InsertAdmin(req *users.UserRegisterReq) (*users.User, erro
 	return result, nil
 }
 
-func (u *UserUsecase) GetPassport(req *users.UserCredential) (*users.UserPassport, error) {
+func (u *userUsecase) GetPassport(req *users.UserCredential) (*users.UserPassport, error) {
 	user, err := u.usersRepository.FindOneUserByEmail(req.Email)
 	if err != nil {
 		return nil, err
@@ -101,7 +103,7 @@ func (u *UserUsecase) GetPassport(req *users.UserCredential) (*users.UserPasspor
 
 }
 
-func (u *UserUsecase) DeleteOauth(oauthId string) error {
+func (u *userUsecase) DeleteOauth(oauthId string) error {
 	if err := u.usersRepository.DeleteOauth(oauthId); err != nil {
 		return err
 	}
@@ -109,7 +111,7 @@ func (u *UserUsecase) DeleteOauth(oauthId string) error {
 
 }
 
-func (u *UserUsecase) GetUserProfile(userId string) (*users.User, error) {
+func (u *userUsecase) GetUserProfile(userId string) (*users.User, error) {
 	profile, err := u.usersRepository.GetProfile(userId)
 	if err != nil {
 		return nil, err
@@ -118,7 +120,7 @@ func (u *UserUsecase) GetUserProfile(userId string) (*users.User, error) {
 
 }
 
-func (u *UserUsecase) UpdateUserProfile(req *users.UserUpdate) (*users.User, error) {
+func (u *userUsecase) UpdateUserProfile(req *users.UserUpdate) (*users.User, error) {
 	if err := u.usersRepository.UpdateProfile(req); err != nil {
 		return nil, err
 	}
@@ -132,7 +134,7 @@ func (u *UserUsecase) UpdateUserProfile(req *users.UserUpdate) (*users.User, err
 
 }
 
-func (u *UserUsecase) Wishlist(userId, prodId string) (string, error) {
+func (u *userUsecase) Wishlist(userId, prodId string) (string, error) {
 	var result string
 	// check if it is already add into wishlist or not
 	check, err := u.usersRepository.CheckWishlist(userId, prodId)
@@ -155,10 +157,38 @@ func (u *UserUsecase) Wishlist(userId, prodId string) (string, error) {
 	return result, nil
 }
 
-func (u *UserUsecase) GetWishlist(userId string) (*users.WishlistRes, error) {
+func (u *userUsecase) GetWishlist(userId string) (*users.WishlistRes, error) {
 	result, err := u.usersRepository.FindWishlist(userId)
 	if err != nil {
 		return nil, err
 	}
 	return result, nil
+}
+
+func (u *userUsecase) AddCart(req *users.AddCartReq) (string, error) {
+	result := ""
+	check, err := u.usersRepository.CheckCart(req.UserId, req.ProductId)
+	if err != nil {
+		return "", err
+	}
+
+	if check {
+		if err := u.usersRepository.AddCartAgain(req.UserId, req.ProductId); err != nil {
+			return "", err
+		}
+		result = "Added 1 More"
+	} else {
+		if err := u.usersRepository.AddCart(req); err != nil {
+			return "", err
+		}
+		result = "Added"
+	}
+	return result, nil
+}
+
+func (u *userUsecase) RemoveCart(userId, prodId string) (string, error) {
+	if err := u.usersRepository.RemoveCart(userId, prodId); err != nil {
+		return "", err
+	}
+	return "removed", nil
 }

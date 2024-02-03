@@ -5,6 +5,7 @@ import (
 	"mime/multipart"
 	"regexp"
 
+	"github.com/deeptech-kmitl/Cicero-Backend/modules/entities"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -96,13 +97,14 @@ type UserUpdate struct {
 type WishlistRes []*ProductRes
 
 type ProductRes struct {
-	ProductTitle string      `db:"product_title" json:"product_title"`
-	ProductPrice string      `db:"product_price" json:"product_price"`
-	Images       []*ImageRes `json:"images"`
+	Id           string               `db:"id" json:"id"`
+	ProductTitle string               `db:"product_title" json:"product_title"`
+	ProductPrice string               `db:"product_price" json:"product_price"`
+	Images       []*entities.ImageRes `json:"images"`
 }
 
-type ImageRes struct {
-	Id       string `db:"id" json:"id"`
-	Url      string `db:"url" json:"url"`
-	Filename string `db:"filename" json:"filename"`
+type AddCartReq struct {
+	ProductId string `json:"product_id" form:"product_id"`
+	UserId    string `json:"user_id" form:"user_id"`
+	Size      string `json:"size" form:"size"`
 }
