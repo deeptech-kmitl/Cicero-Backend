@@ -94,12 +94,12 @@ type UserUpdate struct {
 	Avatar    string `db:"avatar" json:"avatar"`
 }
 
-type WishlistRes []*ProductRes
+type WishlistRes []*ProductWishlistRes
 
-type ProductRes struct {
+type ProductWishlistRes struct {
 	Id           string               `db:"id" json:"id"`
 	ProductTitle string               `db:"product_title" json:"product_title"`
-	ProductPrice string               `db:"product_price" json:"product_price"`
+	ProductPrice float64              `db:"product_price" json:"product_price"`
 	Images       []*entities.ImageRes `json:"images"`
 }
 
@@ -107,4 +107,16 @@ type AddCartReq struct {
 	ProductId string `json:"product_id" form:"product_id"`
 	UserId    string `json:"user_id" form:"user_id"`
 	Size      string `json:"size" form:"size"`
+}
+
+type CartRes []*Cart
+
+type Cart struct {
+	Id           string               `db:"id" json:"id"`
+	Size         string               `db:"size" json:"size"`
+	Qty          int                  `db:"qty" json:"qty"`
+	ProductTitle string               `db:"product_title" json:"product_title"`
+	ProductPrice float64              `db:"product_price" json:"product_price"`
+	ProductDesc  string               `db:"product_desc" json:"product_desc"`
+	Images       []*entities.ImageRes `json:"images"`
 }

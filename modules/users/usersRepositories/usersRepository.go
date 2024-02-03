@@ -27,6 +27,7 @@ type IUsersRepository interface {
 	AddCart(req *users.AddCartReq) error
 	AddCartAgain(userId, prodId string) error
 	RemoveCart(userId, prodId string) error
+	FindCart(userId string) (*users.CartRes, error)
 }
 
 type usersRepository struct {
@@ -381,4 +382,48 @@ func (r *usersRepository) AddCartAgain(userId, prodId string) error {
 	}
 
 	return nil
+}
+
+func (r *usersRepository) FindCart(userId string) (*users.CartRes, error) {
+	query := `
+	SELECT
+		COALESCE(array_to_json(array_agg("cart")), '[]'::json)
+	FROM (
+		SELECT
+			"p"."id",
+			"p"."product_title",
+			"p"."product_price",
+			"p"."product_desc",
+			"c"."qty",
+			"c"."size",
+			(
+				SELECT
+					COALESCE(array_to_json(array_agg("it")), '[]'::json)
+				FROM (
+					SELECT
+						"i"."id",
+						"i"."filename",
+						"i"."url"
+					FROM "Image" "i"
+					WHERE "i"."product_id" = "p"."id"
+				) AS "it"
+			) AS "images"
+		FROM
+			"Cart" c
+		JOIN "Product" p ON c."product_id" = p."id"
+		WHERE c."user_id" = $1
+	) AS "cart";
+	`
+	CartBytes := make([]byte, 0)
+	if err := r.db.Get(&CartBytes, query, userId); err != nil {
+		return nil, fmt.Errorf("get cart failed: %v", err)
+	}
+
+	cart := make(users.CartRes, 0)
+	if err := json.Unmarshal(CartBytes, &cart); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal cart: %v", err)
+	}
+
+	return &cart, nil
+
 }

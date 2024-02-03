@@ -21,6 +21,7 @@ type IUserUsecase interface {
 	GetWishlist(userId string) (*users.WishlistRes, error)
 	AddCart(req *users.AddCartReq) (string, error)
 	RemoveCart(userId, prodId string) (string, error)
+	GetCart(userId string) (*users.CartRes, error)
 }
 
 type userUsecase struct {
@@ -191,4 +192,12 @@ func (u *userUsecase) RemoveCart(userId, prodId string) (string, error) {
 		return "", err
 	}
 	return "removed", nil
+}
+
+func (u *userUsecase) GetCart(userId string) (*users.CartRes, error) {
+	result, err := u.usersRepository.FindCart(userId)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
