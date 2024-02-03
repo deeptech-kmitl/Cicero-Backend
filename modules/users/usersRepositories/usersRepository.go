@@ -28,9 +28,9 @@ type IUsersRepository interface {
 	AddCartAgain(userId, prodId string) error
 	RemoveCart(userId, prodId string) error
 	FindCart(userId string) (*users.CartRes, error)
-	// GetQtyCart(userId, prodId string) (int, error)
 	DecreaseQtyCart(userId, prodId string) (int, error)
 	IncreaseQtyCart(userId, prodId string) (int, error)
+	UpdateSizeCart(req *users.UpdateSizeReq) (string, error)
 }
 
 type usersRepository struct {
@@ -489,4 +489,25 @@ func (r *usersRepository) IncreaseQtyCart(userId, prodId string) (int, error) {
 	}
 	return qty, nil
 
+}
+
+func (r *usersRepository) UpdateSizeCart(req *users.UpdateSizeReq) (string, error) {
+	query := `
+	UPDATE "Cart"
+	SET "size" = $1
+	WHERE "user_id" = $2
+	AND "product_id" = $3
+	RETURNING "size";
+	`
+
+	var size string
+	if err := r.db.Get(&size, query, req.Size, req.UserId, req.ProductId); err != nil {
+		switch err.Error() {
+		case "sql: no rows in result set":
+			return "", fmt.Errorf("cart not found")
+		default:
+			return "", fmt.Errorf("update size cart failed: %v", err)
+		}
+	}
+	return size, nil
 }

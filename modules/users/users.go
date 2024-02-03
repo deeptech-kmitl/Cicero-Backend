@@ -120,3 +120,9 @@ type Cart struct {
 	ProductDesc  string               `db:"product_desc" json:"product_desc"`
 	Images       []*entities.ImageRes `json:"images"`
 }
+
+type UpdateSizeReq struct {
+	UserId    string `json:"user_id" form:"user_id"`
+	ProductId string `json:"product_id" form:"product_id"`
+	Size      string `json:"size" form:"size"`
+}

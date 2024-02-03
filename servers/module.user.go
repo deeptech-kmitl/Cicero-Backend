@@ -50,6 +50,7 @@ func (m *userModule) Init() {
 	router.Get("/cart/:user_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.GetCart)
 	router.Patch("/cart/qtyPlus/:user_id/:product_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.DecreaseQtyCart)
 	router.Patch("/cart/qtyMinus/:user_id/:product_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.IncreaseQtyCart)
+	router.Patch("/cart/size/:user_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.UpdateSizeCart)
 }
 
 func (p *userModule) Repository() usersRepositories.IUsersRepository { return p.repository }

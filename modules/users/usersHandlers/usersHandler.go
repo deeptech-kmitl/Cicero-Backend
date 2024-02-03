@@ -32,6 +32,7 @@ const (
 	GetCartErr           userHandlerErrCode = "users-011"
 	DecreaseQtyCartErr   userHandlerErrCode = "users-012"
 	IncreaseQtyCartErr   userHandlerErrCode = "users-013"
+	UpdateSizeCartErr    userHandlerErrCode = "users-014"
 )
 
 type IUsersHandler interface {
@@ -48,6 +49,7 @@ type IUsersHandler interface {
 	GetCart(c *fiber.Ctx) error
 	DecreaseQtyCart(c *fiber.Ctx) error
 	IncreaseQtyCart(c *fiber.Ctx) error
+	UpdateSizeCart(c *fiber.Ctx) error
 }
 
 type usersHandler struct {
@@ -461,4 +463,27 @@ func (h *usersHandler) IncreaseQtyCart(c *fiber.Ctx) error {
 	}
 
 	return entities.NewResponse(c).Success(fiber.StatusOK, qty).Res()
+}
+
+func (h *usersHandler) UpdateSizeCart(c *fiber.Ctx) error {
+	req := new(users.UpdateSizeReq)
+
+	if err := c.BodyParser(req); err != nil {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(UpdateSizeCartErr),
+			err.Error(),
+		).Res()
+	}
+
+	size, err := h.userUsecase.UpdateSizeCart(req)
+	if err != nil {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(UpdateSizeCartErr),
+			err.Error(),
+		).Res()
+	}
+
+	return entities.NewResponse(c).Success(fiber.StatusOK, size).Res()
 }
