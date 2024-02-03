@@ -28,6 +28,9 @@ type IUsersRepository interface {
 	AddCartAgain(userId, prodId string) error
 	RemoveCart(userId, prodId string) error
 	FindCart(userId string) (*users.CartRes, error)
+	// GetQtyCart(userId, prodId string) (int, error)
+	DecreaseQtyCart(userId, prodId string) (int, error)
+	IncreaseQtyCart(userId, prodId string) (int, error)
 }
 
 type usersRepository struct {
@@ -425,5 +428,65 @@ func (r *usersRepository) FindCart(userId string) (*users.CartRes, error) {
 	}
 
 	return &cart, nil
+
+}
+
+// func (r *usersRepository) GetQtyCart(userId, prodId string) (int, error) {
+// 	query := `
+// 	SELECT
+// 		qty
+// 	FROM "Cart"
+// 	WHERE "user_id" = $1
+// 	AND "product_id" = $2;
+// 	`
+// 	var qty int
+// 	if err := r.db.Get(qty, query, userId, prodId); err != nil {
+// 		return 0, fmt.Errorf("cart not found")
+// 	}
+// 	return qty, nil
+
+// }
+
+func (r *usersRepository) DecreaseQtyCart(userId, prodId string) (int, error) {
+	query := `
+	UPDATE "Cart"
+	SET "qty" = "qty" - 1
+	WHERE "user_id" = $1
+	AND "product_id" = $2
+	RETURNING "qty";
+	`
+
+	var qty int
+	if err := r.db.Get(&qty, query, userId, prodId); err != nil {
+		switch err.Error() {
+		case "sql: no rows in result set":
+			return 0, fmt.Errorf("cart not found")
+		default:
+			return 0, fmt.Errorf("decrease qty cart failed: %v", err)
+		}
+	}
+	return qty, nil
+
+}
+
+func (r *usersRepository) IncreaseQtyCart(userId, prodId string) (int, error) {
+	query := `
+	UPDATE "Cart"
+	SET "qty" = "qty" + 1
+	WHERE "user_id" = $1
+	AND "product_id" = $2
+	RETURNING "qty";
+	`
+
+	var qty int
+	if err := r.db.Get(&qty, query, userId, prodId); err != nil {
+		switch err.Error() {
+		case "sql: no rows in result set":
+			return 0, fmt.Errorf("cart not found")
+		default:
+			return 0, fmt.Errorf("increase qty cart failed: %v", err)
+		}
+	}
+	return qty, nil
 
 }

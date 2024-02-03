@@ -30,6 +30,8 @@ const (
 	AddCartErr           userHandlerErrCode = "users-009"
 	RemoveCartErr        userHandlerErrCode = "users-010"
 	GetCartErr           userHandlerErrCode = "users-011"
+	DecreaseQtyCartErr   userHandlerErrCode = "users-012"
+	IncreaseQtyCartErr   userHandlerErrCode = "users-013"
 )
 
 type IUsersHandler interface {
@@ -44,6 +46,8 @@ type IUsersHandler interface {
 	AddCart(c *fiber.Ctx) error
 	RemoveCart(c *fiber.Ctx) error
 	GetCart(c *fiber.Ctx) error
+	DecreaseQtyCart(c *fiber.Ctx) error
+	IncreaseQtyCart(c *fiber.Ctx) error
 }
 
 type usersHandler struct {
@@ -425,4 +429,36 @@ func (h *usersHandler) GetCart(c *fiber.Ctx) error {
 	}
 
 	return entities.NewResponse(c).Success(fiber.StatusOK, result).Res()
+}
+
+func (h *usersHandler) DecreaseQtyCart(c *fiber.Ctx) error {
+	userId := strings.Trim(c.Params("user_id"), " ")
+	prodId := strings.Trim(c.Params("product_id"), " ")
+
+	qty, err := h.userUsecase.DecreaseQtyCart(userId, prodId)
+	if err != nil {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(DecreaseQtyCartErr),
+			err.Error(),
+		).Res()
+	}
+
+	return entities.NewResponse(c).Success(fiber.StatusOK, qty).Res()
+}
+
+func (h *usersHandler) IncreaseQtyCart(c *fiber.Ctx) error {
+	userId := strings.Trim(c.Params("user_id"), " ")
+	prodId := strings.Trim(c.Params("product_id"), " ")
+
+	qty, err := h.userUsecase.IncreaseQtyCart(userId, prodId)
+	if err != nil {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(IncreaseQtyCartErr),
+			err.Error(),
+		).Res()
+	}
+
+	return entities.NewResponse(c).Success(fiber.StatusOK, qty).Res()
 }

@@ -22,6 +22,8 @@ type IUserUsecase interface {
 	AddCart(req *users.AddCartReq) (string, error)
 	RemoveCart(userId, prodId string) (string, error)
 	GetCart(userId string) (*users.CartRes, error)
+	DecreaseQtyCart(userId, prodId string) (int, error)
+	IncreaseQtyCart(userId, prodId string) (int, error)
 }
 
 type userUsecase struct {
@@ -200,4 +202,30 @@ func (u *userUsecase) GetCart(userId string) (*users.CartRes, error) {
 		return nil, err
 	}
 	return result, nil
+}
+
+func (u *userUsecase) DecreaseQtyCart(userId, prodId string) (int, error) {
+
+	qty, err := u.usersRepository.DecreaseQtyCart(userId, prodId)
+	if err != nil {
+		return 0, err
+	}
+
+	if qty <= 0 {
+		if err := u.usersRepository.RemoveCart(userId, prodId); err != nil {
+			return 0, err
+		}
+	}
+
+	return qty, nil
+}
+
+func (u *userUsecase) IncreaseQtyCart(userId, prodId string) (int, error) {
+
+	qty, err := u.usersRepository.IncreaseQtyCart(userId, prodId)
+	if err != nil {
+		return 0, err
+	}
+
+	return qty, nil
 }
