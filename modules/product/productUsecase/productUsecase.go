@@ -8,6 +8,7 @@ import (
 
 type IProductUsecase interface {
 	FindOneProduct(prodId string) (*product.Product, error)
+	AddProduct(req *product.AddProduct) (*product.Product, error)
 }
 
 type productUsecase struct {
@@ -28,4 +29,12 @@ func (u *productUsecase) FindOneProduct(prodId string) (*product.Product, error)
 		return nil, err
 	}
 	return result, nil
+}
+
+func (u *productUsecase) AddProduct(req *product.AddProduct) (*product.Product, error) {
+	product, err := u.productsRepository.InsertProduct(req)
+	if err != nil {
+		return nil, err
+	}
+	return product, nil
 }

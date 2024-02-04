@@ -6,11 +6,13 @@ import (
 
 	"github.com/deeptech-kmitl/Cicero-Backend/modules/entities"
 	"github.com/deeptech-kmitl/Cicero-Backend/modules/product"
+	"github.com/deeptech-kmitl/Cicero-Backend/modules/product/productPattern"
 	"github.com/jmoiron/sqlx"
 )
 
 type IProductRepository interface {
 	FindOneProduct(prodId string) (*product.Product, error)
+	InsertProduct(req *product.AddProduct) (*product.Product, error)
 }
 
 type productRepository struct {
@@ -76,3 +78,47 @@ func (r *productRepository) FindOneProduct(prodId string) (*product.Product, err
 	return product, nil
 
 }
+
+func (r *productRepository) InsertProduct(req *product.AddProduct) (*product.Product, error) {
+	builder := productPattern.InsertProductBuilder(r.db, req)
+	productId, err := productPattern.InsertProductEngineer(builder).InsertProduct()
+	if err != nil {
+		return nil, fmt.Errorf("insert product failed: %v", err)
+	}
+
+	product, err := r.FindOneProduct(productId)
+	if err != nil {
+		return nil, fmt.Errorf("find product failed: %v", err)
+	}
+
+	return product, nil
+
+}
+
+// func (r *productRepository) UpdateProduct(req *products.Products) (*products.Products, error) {
+// 	builder := productsPatterns.UpdateProductBuilder(r.db, req, r.fileUsecase, r.cfg)
+// 	engineer := productsPatterns.UpdateProductEngineer(builder)
+
+// 	if err := engineer.UpdateProduct(); err != nil {
+// 		return nil, err
+// 	}
+
+// 	product, err := r.FindOneProduct(req.Id)
+// 	if err != nil {
+// 		return nil,  err
+// 	}
+// 	return product, nil
+
+// }
+
+// func (r *productRepository) DeleteProduct(productId string) error {
+// 	ctx, cancel := context.WithTimeout(context.Background(), time.Second * 15) // Timeout of 15 seconds
+// 	defer cancel()
+// 	query := `DELETE FROM "products" WHERE "id" = $1;`
+
+// 	if _, err := r.db.ExecContext(ctx, query, productId); err != nil {
+//     	return fmt.Errorf("delete product failed: %v", err)
+// 	}
+
+// 	return nil
+// }

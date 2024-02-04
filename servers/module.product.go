@@ -1,6 +1,7 @@
 package servers
 
 import (
+	"github.com/deeptech-kmitl/Cicero-Backend/modules/files/filesUsecase"
 	"github.com/deeptech-kmitl/Cicero-Backend/modules/product/productHandler"
 	"github.com/deeptech-kmitl/Cicero-Backend/modules/product/productRepository"
 	"github.com/deeptech-kmitl/Cicero-Backend/modules/product/productUsecase"
@@ -21,9 +22,10 @@ type productModule struct {
 }
 
 func (m *moduleFactory) ProductModule() IProductModule {
+	fileUsecase := filesUsecase.FilesUsecase(m.s.cfg)
 	repo := productRepository.ProductRepository(m.s.db)
 	usecase := productUsecase.ProductUsecase(repo, m.s.cfg)
-	handler := productHandler.ProductHandler(usecase, m.s.cfg)
+	handler := productHandler.ProductHandler(usecase, fileUsecase, m.s.cfg)
 
 	return &productModule{
 		moduleFactory: m,
@@ -36,6 +38,7 @@ func (m *productModule) Init() {
 	router := m.r.Group("/product")
 
 	router.Get("/:product_id", m.handler.FindOneProduct)
+	router.Post("/", m.mid.JwtAuth(), m.mid.Authorize(2), m.handler.AddProduct)
 
 }
 
