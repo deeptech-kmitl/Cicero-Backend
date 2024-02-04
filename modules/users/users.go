@@ -100,6 +100,7 @@ type ProductWishlistRes struct {
 	Id           string               `db:"id" json:"id"`
 	ProductTitle string               `db:"product_title" json:"product_title"`
 	ProductPrice float64              `db:"product_price" json:"product_price"`
+	ProductSize  string               `db:"product_size" json:"product_size"`
 	Images       []*entities.ImageRes `json:"images"`
 }
 

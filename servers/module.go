@@ -12,6 +12,7 @@ type IModuleFactory interface {
 	MonitorModule()
 	UserModule() IUserModule
 	FilesModule() IFilesModule
+	ProductModule() IProductModule
 }
 
 type moduleFactory struct {

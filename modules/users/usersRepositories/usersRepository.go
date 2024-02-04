@@ -282,6 +282,7 @@ func (r *usersRepository) FindWishlist(userId string) (*users.WishlistRes, error
 			"p"."id",
 			"p"."product_title",
 			"p"."product_price",
+			"p"."product_size",
 			(
 				SELECT
 					COALESCE(array_to_json(array_agg("it")), '[]'::json)

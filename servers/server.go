@@ -51,6 +51,7 @@ func (s *server) Start() {
 	modules.MonitorModule()
 	modules.UserModule().Init()
 	modules.FilesModule().Init()
+	modules.ProductModule().Init()
 
 	// if route not found
 	s.app.Use(mid.RouterCheck())
