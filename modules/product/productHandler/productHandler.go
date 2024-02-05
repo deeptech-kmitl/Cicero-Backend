@@ -22,11 +22,15 @@ type productHandlerErrCode = string
 const (
 	FindOneProductErr productHandlerErrCode = "product-001"
 	AddProductErr     productHandlerErrCode = "product-002"
+	DeleteProductErr  productHandlerErrCode = "product-003"
+	findProductErr    productHandlerErrCode = "product-004"
 )
 
 type IProductHandler interface {
 	FindOneProduct(c *fiber.Ctx) error
 	AddProduct(c *fiber.Ctx) error
+	DeleteProduct(c *fiber.Ctx) error
+	FindProduct(c *fiber.Ctx) error
 }
 
 type productHandler struct {
@@ -44,7 +48,7 @@ func ProductHandler(productUsecase productUsecase.IProductUsecase, fileUsecase f
 }
 
 func (h *productHandler) FindOneProduct(c *fiber.Ctx) error {
-	prodId := c.Params("product_id")
+	prodId := strings.TrimSpace(c.Params("product_id"))
 	result, err := h.productUsecase.FindOneProduct(prodId)
 	if err != nil {
 		return entities.NewResponse(c).Error(
@@ -215,4 +219,35 @@ func (h *productHandler) AddProduct(c *fiber.Ctx) error {
 		).Res()
 	}
 	return entities.NewResponse(c).Success(fiber.StatusCreated, result).Res()
+}
+
+func (h *productHandler) DeleteProduct(c *fiber.Ctx) error {
+	prodId := strings.TrimSpace(c.Params("product_id"))
+	result, err := h.productUsecase.DeleteProduct(prodId)
+	if err != nil {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(DeleteProductErr),
+			err.Error(),
+		).Res()
+	}
+	return entities.NewResponse(c).Success(fiber.StatusOK, result).Res()
+}
+
+func (h *productHandler) FindProduct(c *fiber.Ctx) error {
+	req := &product.ProductFilter{
+		PaginationReq: &entities.PaginationReq{},
+		SortReq:       &entities.SortReq{},
+	}
+
+	if err := c.QueryParser(req); err != nil {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(findProductErr),
+			err.Error(),
+		).Res()
+	}
+
+	products := h.productUsecase.FindProduct(req)
+	return entities.NewResponse(c).Success(fiber.StatusOK, products).Res()
 }

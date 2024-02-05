@@ -37,8 +37,10 @@ func (m *moduleFactory) ProductModule() IProductModule {
 func (m *productModule) Init() {
 	router := m.r.Group("/product")
 
+	router.Get("/search", m.handler.FindProduct)
 	router.Get("/:product_id", m.handler.FindOneProduct)
 	router.Post("/", m.mid.JwtAuth(), m.mid.Authorize(2), m.handler.AddProduct)
+	router.Delete("/:product_id", m.mid.JwtAuth(), m.mid.Authorize(2), m.handler.DeleteProduct)
 
 }
 

@@ -28,3 +28,10 @@ type AddProduct struct {
 	ProductCategory string           `db:"product_category" json:"product_category" form:"product_category"`
 	Images          []*files.FileRes `json:"images" form:"images"`
 }
+
+type ProductFilter struct {
+	Id     string `json:"id" query:"id"`
+	Search string `json:"search" query:"search"` // search by title and description
+	*entities.PaginationReq
+	*entities.SortReq
+}

@@ -1,8 +1,10 @@
 package productRepository
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/deeptech-kmitl/Cicero-Backend/modules/entities"
 	"github.com/deeptech-kmitl/Cicero-Backend/modules/product"
@@ -13,6 +15,8 @@ import (
 type IProductRepository interface {
 	FindOneProduct(prodId string) (*product.Product, error)
 	InsertProduct(req *product.AddProduct) (*product.Product, error)
+	DeleteProduct(productId string) error
+	FindProduct(req *product.ProductFilter) ([]*product.Product, int)
 }
 
 type productRepository struct {
@@ -111,14 +115,26 @@ func (r *productRepository) InsertProduct(req *product.AddProduct) (*product.Pro
 
 // }
 
-// func (r *productRepository) DeleteProduct(productId string) error {
-// 	ctx, cancel := context.WithTimeout(context.Background(), time.Second * 15) // Timeout of 15 seconds
-// 	defer cancel()
-// 	query := `DELETE FROM "products" WHERE "id" = $1;`
+func (r *productRepository) DeleteProduct(productId string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15) // Timeout of 15 seconds
+	defer cancel()
+	query := `DELETE FROM "Product" WHERE "id" = $1;`
 
-// 	if _, err := r.db.ExecContext(ctx, query, productId); err != nil {
-//     	return fmt.Errorf("delete product failed: %v", err)
-// 	}
+	if _, err := r.db.ExecContext(ctx, query, productId); err != nil {
+		return fmt.Errorf("delete product failed: %v", err)
+	}
 
-// 	return nil
-// }
+	return nil
+}
+
+func (r *productRepository) FindProduct(req *product.ProductFilter) ([]*product.Product, int) {
+	builder := productPattern.FindProductBuilder(r.db, req)
+	engineer := productPattern.FindProductEngineer(builder)
+
+	result := engineer.FindProduct().Result()
+	count := engineer.CountProduct().Count()
+
+	engineer.FindProduct().PrintQuery()
+
+	return result, count
+}
