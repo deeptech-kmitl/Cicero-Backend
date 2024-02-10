@@ -171,13 +171,13 @@ func (u *userUsecase) GetWishlist(userId string) (*users.WishlistRes, error) {
 
 func (u *userUsecase) AddCart(req *users.AddCartReq) (string, error) {
 	result := ""
-	check, err := u.usersRepository.CheckCart(req.UserId, req.ProductId)
+	check, err := u.usersRepository.CheckCart(req.UserId, req.ProductId, req.Size)
 	if err != nil {
 		return "", err
 	}
 
 	if check {
-		if err := u.usersRepository.AddCartAgain(req.UserId, req.ProductId); err != nil {
+		if err := u.usersRepository.AddCartAgain(req); err != nil {
 			return "", err
 		}
 		result = "Added 1 More"

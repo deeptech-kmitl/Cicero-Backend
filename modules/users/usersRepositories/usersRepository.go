@@ -23,9 +23,9 @@ type IUsersRepository interface {
 	RemoveWishlist(userId, prodId string) error
 	CheckWishlist(userId, prodId string) (bool, error)
 	FindWishlist(userId string) (*users.WishlistRes, error)
-	CheckCart(userId, prodId string) (bool, error)
+	CheckCart(userId, prodId, size string) (bool, error)
 	AddCart(req *users.AddCartReq) error
-	AddCartAgain(userId, prodId string) error
+	AddCartAgain(req *users.AddCartReq) error
 	RemoveCart(userId, prodId string) error
 	FindCart(userId string) (*users.CartRes, error)
 	DecreaseQtyCart(userId, prodId string) (int, error)
@@ -356,22 +356,23 @@ func (r *usersRepository) RemoveCart(userId, prodId string) error {
 	return nil
 }
 
-func (r *usersRepository) CheckCart(userId, prodId string) (bool, error) {
+func (r *usersRepository) CheckCart(userId, prodId, size string) (bool, error) {
 	query := `
 	SELECT
 		(CASE WHEN COUNT(*) = 1 THEN TRUE ELSE FALSE END)
 	FROM "Cart"
 	WHERE "user_id" = $1
-	AND "product_id" = $2;`
+	AND "product_id" = $2
+	AND "size" = $3;`
 
 	var check bool
-	if err := r.db.Get(&check, query, userId, prodId); err != nil {
+	if err := r.db.Get(&check, query, userId, prodId, size); err != nil {
 		return false, fmt.Errorf("check cart failed: %v", err)
 	}
 	return check, nil
 }
 
-func (r *usersRepository) AddCartAgain(userId, prodId string) error {
+func (r *usersRepository) AddCartAgain(req *users.AddCartReq) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -379,9 +380,10 @@ func (r *usersRepository) AddCartAgain(userId, prodId string) error {
 	UPDATE "Cart"
 	SET "qty" = "qty" + 1
 	WHERE "user_id" = $1
-	AND "product_id" = $2;
+	AND "product_id" = $2
+	AND "size" = $3;
 	`
-	if _, err := r.db.ExecContext(ctx, query, userId, prodId); err != nil {
+	if _, err := r.db.ExecContext(ctx, query, req.UserId, req.ProductId, req.Size); err != nil {
 		return fmt.Errorf("add cart again failed: %v", err)
 	}
 
