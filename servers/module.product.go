@@ -41,6 +41,10 @@ func (m *productModule) Init() {
 	router.Get("/:product_id", m.handler.FindOneProduct)
 	router.Post("/", m.mid.JwtAuth(), m.mid.Authorize(2), m.handler.AddProduct)
 	router.Delete("/:product_id", m.mid.JwtAuth(), m.mid.Authorize(2), m.handler.DeleteProduct)
+	router.Put("/", m.mid.JwtAuth(), m.mid.Authorize(2), m.handler.UpdateProduct)
+	router.Get("/image/:product_id", m.handler.FindImageByProductId)
+	router.Delete("/image/:image_id", m.mid.JwtAuth(), m.mid.Authorize(2), m.handler.DeleteImageProduct)
+	router.Post("/image/:product_id", m.mid.JwtAuth(), m.mid.Authorize(2), m.handler.InsertImageProduct)
 
 }
 
