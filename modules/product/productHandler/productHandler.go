@@ -37,8 +37,6 @@ type IProductHandler interface {
 	FindProduct(c *fiber.Ctx) error
 	UpdateProduct(c *fiber.Ctx) error
 	FindImageByProductId(c *fiber.Ctx) error
-	DeleteImageProduct(c *fiber.Ctx) error
-	InsertImageProduct(c *fiber.Ctx) error
 }
 
 type productHandler struct {
@@ -261,16 +259,147 @@ func (h *productHandler) FindProduct(c *fiber.Ctx) error {
 }
 
 func (h *productHandler) UpdateProduct(c *fiber.Ctx) error {
-	req := new(product.UpdateProduct)
-	if err := c.BodyParser(req); err != nil {
+
+	form, err := c.MultipartForm()
+	if err != nil {
 		return entities.NewResponse(c).Error(
 			fiber.ErrBadRequest.Code,
 			string(UpdateProductErr),
 			err.Error(),
 		).Res()
 	}
+	// productId := ""
+	// if values, exists := form.Value["id"]; exists && len(values) > 0 {
+	// 	productId = values[0]
+	// }
+	productId, exists := form.Value["id"]
+	if !exists || len(productId[0]) == 0 {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(AddProductErr),
+			"product_id is required",
+		).Res()
+	}
+	productTitle := ""
+	if values, exists := form.Value["product_title"]; exists && len(values) > 0 {
+		productTitle = values[0]
+	}
+	productDesc := ""
+	if values, exists := form.Value["product_desc"]; exists && len(values) > 0 {
+		productDesc = values[0]
+	}
+	productPriceStr := ""
+	values, exists := form.Value["product_price"]
+	if exists && len(values) > 0 {
+		productPriceStr = values[0]
+	} else if !exists {
+		productPriceStr = "0"
+	}
+	productPriceFloat, err := strconv.ParseFloat(productPriceStr, 64)
+	if err != nil {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(UpdateProductErr),
+			"invalid product price",
+		).Res()
+	}
 
-	result, err := h.productUsecase.UpdateProduct(req)
+	if productPriceFloat < 0 {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(UpdateProductErr),
+			"product price must be greater than 0",
+		).Res()
+	}
+
+	productColor := ""
+	if values, exists := form.Value["product_color"]; exists && len(values) > 0 {
+		productColor = values[0]
+	}
+	productSize := ""
+	if values, exists := form.Value["product_size"]; exists && len(values) > 0 {
+		productSize = values[0]
+	}
+	productSex := ""
+	if values, exists := form.Value["product_sex"]; exists && len(values) > 0 {
+		productSex = values[0]
+	}
+	productCategory := ""
+	if values, exists := form.Value["product_category"]; exists && len(values) > 0 {
+		productCategory = values[0]
+	}
+
+	imagesRes := make([]*files.FileRes, len(form.File["images"]))
+	if images, exists := form.File["images"]; exists {
+		// files ext validation
+		extMap := map[string]string{
+			"png":  "png",
+			"jpg":  "jpg",
+			"jpeg": "jpeg",
+		}
+
+		req := make([]*files.FileReq, 0)
+
+		for _, file := range images {
+			// check file extension
+			ext := strings.TrimPrefix(filepath.Ext(file.Filename), ".")
+			if extMap[ext] != ext || extMap[ext] == "" {
+				return entities.NewResponse(c).Error(
+					fiber.ErrBadRequest.Code,
+					string(UpdateProductErr),
+					"invalid file extension",
+				).Res()
+			}
+			// check file size
+			if file.Size > int64(h.cfg.App().FileLimit()) {
+				return entities.NewResponse(c).Error(
+					fiber.ErrBadRequest.Code,
+					string(UpdateProductErr),
+					fmt.Sprintf("file size must less than %d MB", int(math.Ceil(float64(h.cfg.App().FileLimit())/math.Pow(1024, 2)))),
+				).Res()
+			}
+
+			filename := utils.RandFileName(ext)
+			req = append(req, &files.FileReq{
+				File:        file,
+				Destination: fmt.Sprintf("%s/%s", productId, filename),
+				FileName:    filename,
+				Extension:   ext,
+			})
+			fmt.Println(req)
+		}
+
+		img, err := h.fileUsecase.UploadToGCP(req)
+		if err != nil {
+			return entities.NewResponse(c).Error(
+				fiber.ErrInternalServerError.Code,
+				string(UpdateProductErr),
+				err.Error(),
+			).Res()
+		}
+		fmt.Println("img", img)
+
+		copy(imagesRes, img)
+
+	}
+
+	// fmt.Println("imagesRes", imagesRes)
+
+	prod := &product.UpdateProduct{
+		Id:              productId[0],
+		ProductTitle:    productTitle,
+		ProductDesc:     productDesc,
+		ProductPrice:    productPriceFloat,
+		ProductColor:    productColor,
+		ProductSize:     productSize,
+		ProductSex:      productSex,
+		ProductCategory: productCategory,
+		Images:          imagesRes,
+	}
+
+	fmt.Println("prod", prod)
+
+	result, err := h.productUsecase.UpdateProduct(prod)
 	if err != nil {
 		return entities.NewResponse(c).Error(
 			fiber.ErrBadRequest.Code,
@@ -291,98 +420,5 @@ func (h *productHandler) FindImageByProductId(c *fiber.Ctx) error {
 			err.Error(),
 		).Res()
 	}
-	return entities.NewResponse(c).Success(fiber.StatusOK, result).Res()
-}
-
-func (h *productHandler) DeleteImageProduct(c *fiber.Ctx) error {
-	imageId := strings.TrimSpace(c.Params("image_id"))
-
-	result, err := h.productUsecase.DeleteImageProduct(imageId)
-	if err != nil {
-		return entities.NewResponse(c).Error(
-			fiber.ErrInternalServerError.Code,
-			string(DeleteImageProductErr),
-			err.Error(),
-		).Res()
-	}
-
-	return entities.NewResponse(c).Success(fiber.StatusOK, result).Res()
-}
-
-func (h *productHandler) InsertImageProduct(c *fiber.Ctx) error {
-	prodId := strings.TrimSpace(c.Params("product_id"))
-	form, err := c.MultipartForm()
-	if err != nil {
-		return entities.NewResponse(c).Error(
-			fiber.ErrBadRequest.Code,
-			string(InsertImageProductErr),
-			err.Error(),
-		).Res()
-	}
-
-	images, exists := form.File["images"]
-	if !exists || len(images) == 0 {
-		return entities.NewResponse(c).Error(
-			fiber.ErrBadRequest.Code,
-			string(InsertImageProductErr),
-			"images is required",
-		).Res()
-	}
-
-	// files ext validation
-	extMap := map[string]string{
-		"png":  "png",
-		"jpg":  "jpg",
-		"jpeg": "jpeg",
-	}
-
-	req := make([]*files.FileReq, 0)
-
-	for _, file := range images {
-		// check file extension
-		ext := strings.TrimPrefix(filepath.Ext(file.Filename), ".")
-		if extMap[ext] != ext || extMap[ext] == "" {
-			return entities.NewResponse(c).Error(
-				fiber.ErrBadRequest.Code,
-				string(InsertImageProductErr),
-				"invalid file extension",
-			).Res()
-		}
-		// check file size
-		if file.Size > int64(h.cfg.App().FileLimit()) {
-			return entities.NewResponse(c).Error(
-				fiber.ErrBadRequest.Code,
-				string(InsertImageProductErr),
-				fmt.Sprintf("file size must less than %d MB", int(math.Ceil(float64(h.cfg.App().FileLimit())/math.Pow(1024, 2)))),
-			).Res()
-		}
-
-		filename := utils.RandFileName(ext)
-		req = append(req, &files.FileReq{
-			File:        file,
-			Destination: fmt.Sprintf("%s/%s", prodId, filename),
-			FileName:    filename,
-			Extension:   ext,
-		})
-	}
-
-	img, err := h.fileUsecase.UploadToGCP(req)
-	if err != nil {
-		return entities.NewResponse(c).Error(
-			fiber.ErrInternalServerError.Code,
-			string(InsertImageProductErr),
-			err.Error(),
-		).Res()
-	}
-
-	result, err := h.productUsecase.InsertImageProduct(img, prodId)
-	if err != nil {
-		return entities.NewResponse(c).Error(
-			fiber.ErrBadRequest.Code,
-			string(InsertImageProductErr),
-			err.Error(),
-		).Res()
-	}
-
 	return entities.NewResponse(c).Success(fiber.StatusOK, result).Res()
 }
