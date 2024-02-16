@@ -5,7 +5,6 @@ import (
 
 	"github.com/deeptech-kmitl/Cicero-Backend/config"
 	"github.com/deeptech-kmitl/Cicero-Backend/modules/entities"
-	"github.com/deeptech-kmitl/Cicero-Backend/modules/files"
 	"github.com/deeptech-kmitl/Cicero-Backend/modules/product"
 	"github.com/deeptech-kmitl/Cicero-Backend/modules/product/productRepository"
 )
@@ -17,8 +16,6 @@ type IProductUsecase interface {
 	FindProduct(req *product.ProductFilter) *entities.PaginateRes
 	UpdateProduct(req *product.UpdateProduct) (*product.Product, error)
 	FindImageByProductId(productId string) ([]*entities.ImageRes, error)
-	DeleteImageProduct(imageId string) (string, error)
-	InsertImageProduct(images []*files.FileRes, prodId string) (string, error)
 }
 
 type productUsecase struct {
@@ -97,18 +94,4 @@ func (u *productUsecase) FindImageByProductId(productId string) ([]*entities.Ima
 		return nil, err
 	}
 	return result, nil
-}
-
-func (u *productUsecase) DeleteImageProduct(imageId string) (string, error) {
-	if err := u.productsRepository.DeleteImageProduct(imageId); err != nil {
-		return "", err
-	}
-	return "Image deleted", nil
-}
-
-func (u *productUsecase) InsertImageProduct(images []*files.FileRes, prodId string) (string, error) {
-	if err := u.productsRepository.InsertImageProduct(images, prodId); err != nil {
-		return "", err
-	}
-	return "Image inserted", nil
 }

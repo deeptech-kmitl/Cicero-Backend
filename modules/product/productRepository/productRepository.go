@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
+	"github.com/deeptech-kmitl/Cicero-Backend/config"
 	"github.com/deeptech-kmitl/Cicero-Backend/modules/entities"
-	"github.com/deeptech-kmitl/Cicero-Backend/modules/files"
+	"github.com/deeptech-kmitl/Cicero-Backend/modules/files/filesUsecase"
 	"github.com/deeptech-kmitl/Cicero-Backend/modules/product"
 	"github.com/deeptech-kmitl/Cicero-Backend/modules/product/productPattern"
 	"github.com/jmoiron/sqlx"
@@ -21,12 +21,12 @@ type IProductRepository interface {
 	FindProduct(req *product.ProductFilter) ([]*product.Product, int)
 	UpdateProduct(req *product.UpdateProduct) (*product.Product, error)
 	FindImageByProductId(productId string) ([]*entities.ImageRes, error)
-	DeleteImageProduct(imageId string) error
-	InsertImageProduct(images []*files.FileRes, prodId string) error
 }
 
 type productRepository struct {
-	db *sqlx.DB
+	db          *sqlx.DB
+	fileUsecase filesUsecase.IFilesUsecase
+	cfg         config.IConfig
 }
 
 func ProductRepository(db *sqlx.DB) IProductRepository {
@@ -106,92 +106,11 @@ func (r *productRepository) InsertProduct(req *product.AddProduct) (*product.Pro
 }
 
 func (r *productRepository) UpdateProduct(req *product.UpdateProduct) (*product.Product, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	builder := productPattern.UpdateProductBuilder(r.db, req, r.fileUsecase, r.cfg)
+	engineer := productPattern.UpdateProductEngineer(builder)
 
-	queryWhereStack := make([]string, 0)
-	values := make([]any, 0)
-	lastIndex := 1
-
-	query := `
-	UPDATE "Product" SET`
-
-	if req.ProductCategory != "" {
-		values = append(values, req.ProductCategory)
-
-		queryWhereStack = append(queryWhereStack, fmt.Sprintf(`
-		"product_category" = $%d?`, lastIndex))
-
-		lastIndex++
-	}
-
-	if req.ProductColor != "" {
-		values = append(values, req.ProductColor)
-
-		queryWhereStack = append(queryWhereStack, fmt.Sprintf(`
-		"product_color" = $%d?`, lastIndex))
-
-		lastIndex++
-	}
-
-	if req.ProductDesc != "" {
-		values = append(values, req.ProductDesc)
-
-		queryWhereStack = append(queryWhereStack, fmt.Sprintf(`
-		"product_desc" = $%d?`, lastIndex))
-
-		lastIndex++
-	}
-
-	if req.ProductSex != "" {
-		values = append(values, req.ProductSex)
-
-		queryWhereStack = append(queryWhereStack, fmt.Sprintf(`
-		"product_sex" = $%d?`, lastIndex))
-
-		lastIndex++
-	}
-	if req.ProductSize != "" {
-		values = append(values, req.ProductSize)
-
-		queryWhereStack = append(queryWhereStack, fmt.Sprintf(`
-		"product_size" = $%d?`, lastIndex))
-
-		lastIndex++
-	}
-	if req.ProductTitle != "" {
-		values = append(values, req.ProductTitle)
-
-		queryWhereStack = append(queryWhereStack, fmt.Sprintf(`
-		"product_title" = $%d?`, lastIndex))
-
-		lastIndex++
-	}
-	if req.ProductPrice > 0 {
-		values = append(values, req.ProductPrice)
-
-		queryWhereStack = append(queryWhereStack, fmt.Sprintf(`
-		"product_price" = $%d?`, lastIndex))
-
-		lastIndex++
-	}
-
-	values = append(values, req.Id)
-
-	queryClose := fmt.Sprintf(`
-	WHERE "id" = $%d;`, lastIndex)
-
-	for i := range queryWhereStack {
-		if i != len(queryWhereStack)-1 {
-			query += strings.Replace(queryWhereStack[i], "?", ",", 1)
-		} else {
-			query += strings.Replace(queryWhereStack[i], "?", "", 1)
-		}
-	}
-	query += queryClose
-
-	if _, err := r.db.ExecContext(ctx, query, values...); err != nil {
-		return nil, fmt.Errorf("update product failed: %v", err)
+	if err := engineer.UpdateProduct(); err != nil {
+		return nil, err
 	}
 
 	product, err := r.FindOneProduct(req.Id)
@@ -240,58 +159,4 @@ func (r *productRepository) FindImageByProductId(productId string) ([]*entities.
 		return nil, fmt.Errorf("find images failed: %v", err)
 	}
 	return images, nil
-}
-
-// delete image by image id
-func (r *productRepository) DeleteImageProduct(imageId string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15) // Timeout of 15 seconds
-	defer cancel()
-	query := `DELETE FROM "Image" WHERE "id" = $1;`
-
-	if _, err := r.db.ExecContext(ctx, query, imageId); err != nil {
-		return fmt.Errorf("delete image product failed: %v", err)
-	}
-
-	return nil
-}
-
-func (r *productRepository) InsertImageProduct(images []*files.FileRes, prodId string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
-	defer cancel()
-
-	query := `
-	INSERT INTO "Image" (
-		"filename",
-		"url",
-		"product_id"
-	)
-	VALUES`
-
-	valueStack := make([]any, 0)
-	var index int
-	for i := range images {
-		valueStack = append(valueStack,
-			images[i].FileName,
-			images[i].Url,
-			prodId,
-		)
-
-		if i != len(images)-1 {
-			query += fmt.Sprintf(`
-			($%d, $%d, $%d),`, index+1, index+2, index+3)
-		} else {
-			query += fmt.Sprintf(`
-			($%d, $%d, $%d);`, index+1, index+2, index+3)
-		}
-		index += 3
-	}
-
-	if _, err := r.db.ExecContext(
-		ctx,
-		query,
-		valueStack...,
-	); err != nil {
-		return fmt.Errorf("insert images product failed: %v", err)
-	}
-	return nil
 }
