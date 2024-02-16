@@ -116,7 +116,8 @@ func (r *usersRepository) GetProfile(userId string) (*users.User, error) {
 		"fname",
 		"lname",
 		"phone",
-		"role_id"
+		"role_id",
+		"avatar"
 	FROM "User"
 	WHERE "id" = $1;`
 

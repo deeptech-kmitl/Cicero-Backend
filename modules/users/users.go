@@ -16,6 +16,7 @@ type User struct {
 	LastName  string `db:"lname" json:"lname" form:"lname"`
 	Phone     string `db:"phone" json:"phone" form:"phone"`
 	RoleId    int    `db:"role_id" json:"role_id"`
+	Avatar    string `db:"avatar" json:"avatar"`
 }
 
 type UserRegisterReq struct {
