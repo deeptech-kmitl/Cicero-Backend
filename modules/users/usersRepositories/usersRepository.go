@@ -13,7 +13,7 @@ import (
 )
 
 type IUsersRepository interface {
-	InsertUser(req *users.UserRegisterReq, isAdmin bool) (*users.User, error)
+	InsertUser(req *users.UserRegisterReq, isAdmin bool) (*users.UserRegisterRes, error)
 	FindOneUserByEmail(email string) (*users.UserCredentialCheck, error)
 	InsertOauth(req *users.UserPassport) error
 	GetProfile(userId string) (*users.User, error)
@@ -43,7 +43,7 @@ func UsersRepository(db *sqlx.DB) IUsersRepository {
 	}
 }
 
-func (r *usersRepository) InsertUser(req *users.UserRegisterReq, isAdmin bool) (*users.User, error) {
+func (r *usersRepository) InsertUser(req *users.UserRegisterReq, isAdmin bool) (*users.UserRegisterRes, error) {
 	result := usersPattern.InsertUser(r.db, req, isAdmin)
 
 	var err error
@@ -75,6 +75,7 @@ func (r *usersRepository) FindOneUserByEmail(email string) (*users.UserCredentia
 		"fname",
 		"lname",
 		"phone",
+		"dob",
 		"role_id"
 	FROM "User"
 	WHERE "email" = $1;`
@@ -117,7 +118,8 @@ func (r *usersRepository) GetProfile(userId string) (*users.User, error) {
 		"lname",
 		"phone",
 		"role_id",
-		"avatar"
+		"avatar",
+		"dob"
 	FROM "User"
 	WHERE "id" = $1;`
 
@@ -185,6 +187,15 @@ func (r *usersRepository) UpdateProfile(req *users.UserUpdate) error {
 
 		queryWhereStack = append(queryWhereStack, fmt.Sprintf(`
 		"phone" = $%d?`, lastIndex))
+
+		lastIndex++
+	}
+
+	if req.Dob != "" {
+		values = append(values, req.Dob)
+
+		queryWhereStack = append(queryWhereStack, fmt.Sprintf(`
+		"dob" = $%d?`, lastIndex))
 
 		lastIndex++
 	}

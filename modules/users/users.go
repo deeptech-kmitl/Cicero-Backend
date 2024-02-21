@@ -2,7 +2,6 @@ package users
 
 import (
 	"fmt"
-	"mime/multipart"
 	"regexp"
 
 	"github.com/deeptech-kmitl/Cicero-Backend/modules/entities"
@@ -17,6 +16,7 @@ type User struct {
 	Phone     string `db:"phone" json:"phone" form:"phone"`
 	RoleId    int    `db:"role_id" json:"role_id"`
 	Avatar    string `db:"avatar" json:"avatar"`
+	Dob       string `db:"dob" json:"dob" form:"dob"`
 }
 
 type UserRegisterReq struct {
@@ -25,6 +25,16 @@ type UserRegisterReq struct {
 	FirstName string `db:"fname" json:"fname" form:"fname"`
 	LastName  string `db:"lname" json:"lname" form:"lname"`
 	Phone     string `db:"phone" json:"phone" form:"phone"`
+	Dob       string `db:"dob" json:"dob" form:"dob"`
+}
+type UserRegisterRes struct {
+	Id        string `db:"id" json:"id"`
+	Email     string `db:"email" json:"email"`
+	FirstName string `db:"fname" json:"fname" form:"fname"`
+	LastName  string `db:"lname" json:"lname" form:"lname"`
+	Phone     string `db:"phone" json:"phone" form:"phone"`
+	RoleId    int    `db:"role_id" json:"role_id"`
+	Dob       string `db:"dob" json:"dob" form:"dob"`
 }
 
 type UserCredentialCheck struct {
@@ -34,6 +44,7 @@ type UserCredentialCheck struct {
 	FirstName string `db:"fname" json:"fname" form:"fname"`
 	LastName  string `db:"lname" json:"lname" form:"lname"`
 	Phone     string `db:"phone" json:"phone" form:"phone"`
+	Dob       string `db:"dob" json:"dob" form:"dob"`
 	RoleId    int    `db:"role_id" json:"role_id"`
 }
 
@@ -78,13 +89,13 @@ type UserRemoveCredential struct {
 	OauthId string `db:"id" json:"oauth_id" form:"oauth_id"`
 }
 
-type UserUpdateReq struct {
-	Email     string                  `json:"email" form:"email"`
-	FirstName string                  `json:"fname" form:"fname"`
-	LastName  string                  `json:"lname" form:"lname"`
-	Phone     string                  `json:"phone" form:"phone"`
-	Avatar    []*multipart.FileHeader `json:"avatar" form:"avatar"`
-}
+// type UserUpdateReq struct {
+// 	Email     string                `json:"email" form:"email"`
+// 	FirstName string                `json:"fname" form:"fname"`
+// 	LastName  string                `json:"lname" form:"lname"`
+// 	Phone     string                `json:"phone" form:"phone"`
+// 	Avatar    *multipart.FileHeader `json:"avatar" form:"avatar"`
+// }
 
 type UserUpdate struct {
 	Id        string `db:"id" json:"id"`
@@ -93,6 +104,7 @@ type UserUpdate struct {
 	LastName  string `db:"lname" json:"lname"`
 	Phone     string `db:"phone" json:"phone"`
 	Avatar    string `db:"avatar" json:"avatar"`
+	Dob       string `db:"dob" json:"dob"`
 }
 
 type WishlistRes []*ProductWishlistRes

@@ -12,7 +12,7 @@ import (
 type IInsertUser interface {
 	Customer() (IInsertUser, error)
 	Admin() (IInsertUser, error)
-	Result() (*users.User, error)
+	Result() (*users.UserRegisterRes, error)
 }
 
 type userReq struct {
@@ -66,9 +66,10 @@ func (f *userReq) Customer() (IInsertUser, error) {
 		fname,
 		lname,
 		phone,
+		dob,
 		role_id
 		)
-	VALUES ($1, $2, $3, $4, $5, 1)
+	VALUES ($1, $2, $3, $4, $5, $6, 1)
 	RETURNING "id";
 	`
 	if err := f.db.QueryRowContext(ctx,
@@ -78,6 +79,7 @@ func (f *userReq) Customer() (IInsertUser, error) {
 		f.req.FirstName,
 		f.req.LastName,
 		f.req.Phone,
+		f.req.Dob,
 	).Scan(&f.id); err != nil {
 		switch err.Error() {
 		case "ERROR: duplicate key value violates unique constraint \"User_email_key\" (SQLSTATE 23505)":
@@ -102,9 +104,10 @@ func (f *userReq) Admin() (IInsertUser, error) {
 		fname,
 		lname,
 		phone,
+		dob,
 		role_id
 		)
-	VALUES ($1, $2, $3, $4, $5, 2)
+	VALUES ($1, $2, $3, $4, $5, $6, 2)
 	RETURNING "id";
 	`
 	if err := f.db.QueryRowContext(ctx,
@@ -114,6 +117,7 @@ func (f *userReq) Admin() (IInsertUser, error) {
 		f.req.FirstName,
 		f.req.LastName,
 		f.req.Phone,
+		f.req.Dob,
 	).Scan(&f.id); err != nil {
 		switch err.Error() {
 		case "ERROR: duplicate key value violates unique constraint \"User_email_key\" (SQLSTATE 23505)":
@@ -127,7 +131,7 @@ func (f *userReq) Admin() (IInsertUser, error) {
 	return f, nil
 }
 
-func (f *userReq) Result() (*users.User, error) {
+func (f *userReq) Result() (*users.UserRegisterRes, error) {
 	query := `
 	SELECT
 		"u"."id",
@@ -135,11 +139,12 @@ func (f *userReq) Result() (*users.User, error) {
 		"u"."fname",
 		"u"."lname",
 		"u"."phone",
+		"u"."dob",
 		"u"."role_id"
 	FROM "User" "u"
 	WHERE "u"."id" = $1;`
 
-	user := new(users.User)
+	user := new(users.UserRegisterRes)
 	if err := f.db.Get(user, query, f.id); err != nil {
 		return nil, fmt.Errorf("get user failed: %v", err)
 	}

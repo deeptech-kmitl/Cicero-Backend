@@ -11,8 +11,8 @@ import (
 )
 
 type IUserUsecase interface {
-	InsertCustomer(req *users.UserRegisterReq) (*users.User, error)
-	InsertAdmin(req *users.UserRegisterReq) (*users.User, error)
+	InsertCustomer(req *users.UserRegisterReq) (*users.UserRegisterRes, error)
+	InsertAdmin(req *users.UserRegisterReq) (*users.UserRegisterRes, error)
 	GetPassport(req *users.UserCredential) (*users.UserPassport, error)
 	DeleteOauth(oauthId string) error
 	GetUserProfile(userId string) (*users.User, error)
@@ -39,7 +39,7 @@ func UserUsecase(usersRepository usersRepositories.IUsersRepository, cfg config.
 	}
 }
 
-func (u *userUsecase) InsertCustomer(req *users.UserRegisterReq) (*users.User, error) {
+func (u *userUsecase) InsertCustomer(req *users.UserRegisterReq) (*users.UserRegisterRes, error) {
 	//hashing password
 	if err := req.BcryptHashing(); err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func (u *userUsecase) InsertCustomer(req *users.UserRegisterReq) (*users.User, e
 	return result, nil
 }
 
-func (u *userUsecase) InsertAdmin(req *users.UserRegisterReq) (*users.User, error) {
+func (u *userUsecase) InsertAdmin(req *users.UserRegisterReq) (*users.UserRegisterRes, error) {
 	//hashing password
 	if err := req.BcryptHashing(); err != nil {
 		return nil, err

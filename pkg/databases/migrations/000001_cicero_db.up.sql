@@ -29,6 +29,7 @@ CREATE TABLE "User" (
   "password" VARCHAR NOT NULL,
   "phone" VARCHAR NOT NULL UNIQUE,
   "avatar" VARCHAR,
+  "dob" VARCHAR NOT NULL,
   "created_at" TIMESTAMP NOT NULL DEFAULT now(),
   "updated_at" TIMESTAMP NOT NULL DEFAULT now()
 );
