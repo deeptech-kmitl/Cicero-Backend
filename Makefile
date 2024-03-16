@@ -1,6 +1,6 @@
-DB_URL=postgres://cicero:123456@localhost:4444/cicero_db_dev?sslmode=disable
-PATH_MIGRATE ?= file://C:/go/Cicero-Backend/pkg/databases/migrations
-PROJECT_ID ?= blabla
+DB_URL ?= postgres://cicero:123456@localhost:4444/cicero_db_dev?sslmode=disable
+PATH_MIGRATE ?= pkg/databases/migrations
+PROJECT_ID ?= armza-410906
 IMAGE_NAME ?= cicero_api
 
 dev:
@@ -27,10 +27,10 @@ run_db:
 	docker start cicero_db_dev
 
 migrate_up:
-	migrate -database '$(DB_URL)' -source $(PATH_MIGRATE) -verbose up
+	migrate -database '$(DB_URL)' -path $(PATH_MIGRATE) -verbose up
 
 migrate_down:
-	migrate -database '$(DB_URL)' -source $(PATH_MIGRATE) -verbose down
+	migrate -database '$(DB_URL)' -path $(PATH_MIGRATE) -verbose down
 
 build: 
 	docker build -t asia.gcr.io/$(PROJECT_ID)/$(IMAGE_NAME) .
