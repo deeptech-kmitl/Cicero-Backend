@@ -8,7 +8,8 @@ RUN go mod download
 RUN CGO_ENABLED=0 go build -o myapp main.go
 
 ## Deploy
-FROM gcr.io/distroless/static-debian12
+FROM alpine:latest
+# FROM gcr.io/distroless/static-debian12
 # for debug applications deployed
 # FROM gcr.io/distroless/static-debian12:debug
 
