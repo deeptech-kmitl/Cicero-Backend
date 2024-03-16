@@ -123,8 +123,6 @@ type AddCartReq struct {
 	Size      string `json:"size" form:"size"`
 }
 
-type CartRes []*Cart
-
 type Cart struct {
 	Id           string               `db:"id" json:"id"`
 	Size         string               `db:"size" json:"size"`

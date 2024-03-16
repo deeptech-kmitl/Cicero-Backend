@@ -43,7 +43,7 @@ func (u *productUsecase) FindProduct(req *product.ProductFilter) *entities.Pagin
 		req.Page = 1
 	}
 	if req.Limit < 3 {
-		req.Limit = 3
+		req.Limit = 100
 	}
 
 	if req.OrderBy == "" {

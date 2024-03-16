@@ -27,7 +27,7 @@ type IUsersRepository interface {
 	AddCart(req *users.AddCartReq) error
 	AddCartAgain(req *users.AddCartReq) error
 	RemoveCart(userId, prodId string) error
-	FindCart(userId string) (*users.CartRes, error)
+	FindCart(userId string) ([]*users.Cart, error)
 	DecreaseQtyCart(userId, prodId string) (int, error)
 	IncreaseQtyCart(userId, prodId string) (int, error)
 	UpdateSizeCart(req *users.UpdateSizeReq) (string, error)
@@ -402,7 +402,7 @@ func (r *usersRepository) AddCartAgain(req *users.AddCartReq) error {
 	return nil
 }
 
-func (r *usersRepository) FindCart(userId string) (*users.CartRes, error) {
+func (r *usersRepository) FindCart(userId string) ([]*users.Cart, error) {
 	query := `
 	SELECT
 		COALESCE(array_to_json(array_agg("cart")), '[]'::json)
@@ -437,12 +437,12 @@ func (r *usersRepository) FindCart(userId string) (*users.CartRes, error) {
 		return nil, fmt.Errorf("get cart failed: %v", err)
 	}
 
-	cart := make(users.CartRes, 0)
+	cart := make([]*users.Cart, 0)
 	if err := json.Unmarshal(CartBytes, &cart); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal cart: %v", err)
 	}
 
-	return &cart, nil
+	return cart, nil
 
 }
 

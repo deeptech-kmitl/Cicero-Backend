@@ -10,6 +10,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 --Create sequence
 CREATE SEQUENCE users_id_seq START WITH 1 INCREMENT BY 1;
 CREATE SEQUENCE products_id_seq START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE orders_id_seq START WITH 1 INCREMENT BY 1;
 
 --Auto update
 CREATE OR REPLACE FUNCTION set_updated_at_column()
@@ -28,7 +29,7 @@ CREATE TABLE "User" (
   "email" VARCHAR UNIQUE NOT NULL,
   "password" VARCHAR NOT NULL,
   "phone" VARCHAR NOT NULL UNIQUE,
-  "avatar" VARCHAR,
+  "avatar" VARCHAR DEFAULT 'https://www.seekpng.com/png/detail/41-410093_circled-user-icon-user-profile-icon-png.png',
   "dob" VARCHAR NOT NULL,
   "created_at" TIMESTAMP NOT NULL DEFAULT now(),
   "updated_at" TIMESTAMP NOT NULL DEFAULT now()
@@ -85,6 +86,18 @@ CREATE TABLE "Cart" (
   "updated_at" TIMESTAMP NOT NULL DEFAULT now()
 );
 
+CREATE TABLE "Order" (
+  "id" VARCHAR(7) PRIMARY KEY DEFAULT CONCAT('O', LPAD(NEXTVAL('orders_id_seq')::TEXT, 6, '0')),
+  "user_id" VARCHAR NOT NULL,
+  "total" FLOAT NOT NULL DEFAULT 0,
+  "status" VARCHAR NOT NULL,
+  "products" jsonb NOT NULL,
+  "address" jsonb NOT NULL,
+  "payment_detail" jsonb NOT NULL,
+  "created_at" TIMESTAMP NOT NULL DEFAULT now(),
+  "updated_at" TIMESTAMP NOT NULL DEFAULT now()
+);
+
 
 
 ALTER TABLE "Oauth" ADD FOREIGN KEY ("user_id") REFERENCES "User" ("id")  ON DELETE CASCADE;
@@ -94,12 +107,14 @@ ALTER TABLE "Wishlist" ADD FOREIGN KEY ("product_id") REFERENCES "Product" ("id"
 ALTER TABLE "Image" ADD FOREIGN KEY ("product_id") REFERENCES "Product" ("id") ON DELETE CASCADE;
 ALTER TABLE "Cart" ADD FOREIGN KEY ("user_id") REFERENCES "User" ("id") ON DELETE CASCADE;
 ALTER TABLE "Cart" ADD FOREIGN KEY ("product_id") REFERENCES "Product" ("id") ON DELETE CASCADE;
+ALTER TABLE "Order" ADD FOREIGN KEY ("user_id") REFERENCES "User" ("id") ON DELETE CASCADE;
 
 CREATE TRIGGER set_updated_at_timestamp_users_table BEFORE UPDATE ON "User" FOR EACH ROW EXECUTE PROCEDURE set_updated_at_column();
 CREATE TRIGGER set_updated_at_timestamp_oauth_table BEFORE UPDATE ON "Oauth" FOR EACH ROW EXECUTE PROCEDURE set_updated_at_column();
 CREATE TRIGGER set_updated_at_timestamp_product_table BEFORE UPDATE ON "Product" FOR EACH ROW EXECUTE PROCEDURE set_updated_at_column();
 CREATE TRIGGER set_updated_at_timestamp_image_table BEFORE UPDATE ON "Image" FOR EACH ROW EXECUTE PROCEDURE set_updated_at_column();
 CREATE TRIGGER set_updated_at_timestamp_cart_table BEFORE UPDATE ON "Cart" FOR EACH ROW EXECUTE PROCEDURE set_updated_at_column();
+CREATE TRIGGER set_updated_at_timestamp_order_table BEFORE UPDATE ON "Order" FOR EACH ROW EXECUTE PROCEDURE set_updated_at_column();
 
 
 COMMIT;

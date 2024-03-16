@@ -52,6 +52,7 @@ func (s *server) Start() {
 	modules.UserModule().Init()
 	modules.FilesModule().Init()
 	modules.ProductModule().Init()
+	modules.OrderModule().Init()
 
 	// if route not found
 	s.app.Use(mid.RouterCheck())

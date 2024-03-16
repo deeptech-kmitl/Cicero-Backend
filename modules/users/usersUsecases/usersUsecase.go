@@ -21,7 +21,7 @@ type IUserUsecase interface {
 	GetWishlist(userId string) (*users.WishlistRes, error)
 	AddCart(req *users.AddCartReq) (string, error)
 	RemoveCart(userId, prodId string) (string, error)
-	GetCart(userId string) (*users.CartRes, error)
+	GetCart(userId string) ([]*users.Cart, error)
 	DecreaseQtyCart(userId, prodId string) (int, error)
 	IncreaseQtyCart(userId, prodId string) (int, error)
 	UpdateSizeCart(req *users.UpdateSizeReq) (string, error)
@@ -197,7 +197,7 @@ func (u *userUsecase) RemoveCart(userId, prodId string) (string, error) {
 	return "removed", nil
 }
 
-func (u *userUsecase) GetCart(userId string) (*users.CartRes, error) {
+func (u *userUsecase) GetCart(userId string) ([]*users.Cart, error) {
 	result, err := u.usersRepository.FindCart(userId)
 	if err != nil {
 		return nil, err

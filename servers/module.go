@@ -13,6 +13,7 @@ type IModuleFactory interface {
 	UserModule() IUserModule
 	FilesModule() IFilesModule
 	ProductModule() IProductModule
+	OrderModule() IOrderModule
 }
 
 type moduleFactory struct {
