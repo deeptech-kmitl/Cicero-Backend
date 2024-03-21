@@ -60,6 +60,7 @@ func (b *findProductBuilder) initQuery() {
 			"p"."product_size",
 			"p"."product_sex",
 			"p"."product_category",
+			"p"."product_stock",
 			(
 				SELECT
 					COALESCE(array_to_json(array_agg("it")), '[]'::json)
