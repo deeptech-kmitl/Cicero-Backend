@@ -23,7 +23,7 @@ type IFindProductBuilder interface {
 	paginate()
 	closeJsonQuery()
 	resetQuery()
-	Result() []*product.Product
+	Result() []*product.GetAllProduct
 	Count() int
 	PrintQuery()
 }
@@ -52,15 +52,15 @@ func (b *findProductBuilder) initQuery() {
 
 	b.query += `
 		SELECT
-			"p"."id",
+			MAX("p"."id") AS "id",
 			"p"."product_title",
-			"p"."product_desc",
-			"p"."product_price",
-			"p"."product_color",
-			"p"."product_size",
-			"p"."product_sex",
-			"p"."product_category",
-			"p"."product_stock",
+			MAX("p"."product_desc") AS "product_desc",
+			MAX("p"."product_price") AS "product_price",
+			MAX("p"."product_color") AS "product_color",
+			jsonb_agg(DISTINCT "p"."product_size") AS "product_size",
+			MAX("p"."product_sex") AS "product_sex",
+			MAX("p"."product_category") AS "product_category",
+			MAX("p"."product_stock") AS "product_stock",
 			(
 				SELECT
 					COALESCE(array_to_json(array_agg("it")), '[]'::json)
@@ -70,7 +70,7 @@ func (b *findProductBuilder) initQuery() {
 						"i"."filename",
 						"i"."url"
 					FROM "Image" "i"
-					WHERE "i"."product_id" = "p"."id"
+					WHERE "i"."product_id" = MAX("p"."id")
 				) AS "it"
 			) AS "images"
 		FROM "Product" "p"
@@ -145,6 +145,7 @@ func (b *findProductBuilder) sort() {
 	}
 
 	b.query += fmt.Sprintf(`
+		GROUP BY "p"."product_title"
         ORDER BY %s %s`, b.req.OrderBy, b.req.Sort)
 }
 func (b *findProductBuilder) paginate() {
@@ -163,21 +164,21 @@ func (b *findProductBuilder) resetQuery() {
 	b.values = make([]any, 0)
 	b.lastStackIndex = 0
 }
-func (b *findProductBuilder) Result() []*product.Product {
+func (b *findProductBuilder) Result() []*product.GetAllProduct {
 	_, cancel := context.WithTimeout(context.Background(), time.Second*15)
 	defer cancel()
 
 	bytes := make([]byte, 0)
-	productsData := make([]*product.Product, 0)
+	productsData := make([]*product.GetAllProduct, 0)
 
 	if err := b.db.Get(&bytes, b.query, b.values...); err != nil {
 		log.Printf("find products failed: %v\n", err)
-		return make([]*product.Product, 0)
+		return make([]*product.GetAllProduct, 0)
 	}
 
 	if err := json.Unmarshal(bytes, &productsData); err != nil {
 		log.Printf("unmarshal products failed: %v\n", err)
-		return make([]*product.Product, 0)
+		return make([]*product.GetAllProduct, 0)
 	}
 	b.resetQuery()
 	return productsData
@@ -214,6 +215,7 @@ func (en *findProductEngineer) FindProduct() IFindProductBuilder {
 	en.builder.sort()
 	en.builder.paginate()
 	en.builder.closeJsonQuery()
+	en.builder.PrintQuery()
 	return en.builder
 }
 

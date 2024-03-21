@@ -18,7 +18,7 @@ type IProductRepository interface {
 	FindOneProduct(prodId string) (*product.Product, error)
 	InsertProduct(req *product.AddProduct) (*product.Product, error)
 	DeleteProduct(productId string) error
-	FindProduct(req *product.ProductFilter) ([]*product.Product, int)
+	FindProduct(req *product.ProductFilter) ([]*product.GetAllProduct, int)
 	UpdateProduct(req *product.UpdateProduct) (*product.Product, error)
 	FindImageByProductId(productId string) ([]*entities.ImageRes, error)
 }
@@ -134,7 +134,7 @@ func (r *productRepository) DeleteProduct(productId string) error {
 	return nil
 }
 
-func (r *productRepository) FindProduct(req *product.ProductFilter) ([]*product.Product, int) {
+func (r *productRepository) FindProduct(req *product.ProductFilter) ([]*product.GetAllProduct, int) {
 	builder := productPattern.FindProductBuilder(r.db, req)
 	engineer := productPattern.FindProductEngineer(builder)
 
