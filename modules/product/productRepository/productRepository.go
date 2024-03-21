@@ -49,6 +49,7 @@ func (r *productRepository) FindOneProduct(prodId string) (*product.Product, err
 			"p"."product_size",
 			"p"."product_sex",
 			"p"."product_category",
+			"p"."product_stock",
 			(
 				SELECT
 					COALESCE(array_to_json(array_agg("it")), '[]'::json)

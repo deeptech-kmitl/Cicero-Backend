@@ -21,6 +21,7 @@ type IUpdateProductBuilder interface {
 	updateSexQuery()
 	updateSizeQuery()
 	updateColorQuery()
+	updateStockQuery()
 	insertImages() error
 	getOldImages() []*entities.ImageRes
 	deleteOldImages() error
@@ -150,6 +151,14 @@ func (b *updateProductBuilder) updateColorQuery() {
 		b.queryFields = append(b.queryFields, fmt.Sprintf(`
 		"product_color" = $%d`, b.lastStackIndex))
 	}
+}
+
+func (b *updateProductBuilder) updateStockQuery() {
+	b.values = append(b.values, b.req.ProductStock)
+	b.lastStackIndex = len(b.values)
+
+	b.queryFields = append(b.queryFields, fmt.Sprintf(`
+		"product_stock" = $%d`, b.lastStackIndex))
 }
 
 func (b *updateProductBuilder) insertImages() error {
@@ -335,6 +344,7 @@ func (en *updateProductEngineer) sumQueryFields() {
 	en.builder.updateSexQuery()
 	en.builder.updateSizeQuery()
 	en.builder.updateColorQuery()
+	en.builder.updateStockQuery()
 
 	fields := en.builder.getQueryFields()
 

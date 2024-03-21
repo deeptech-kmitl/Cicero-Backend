@@ -133,6 +133,34 @@ func (h *productHandler) AddProduct(c *fiber.Ctx) error {
 			"product_category is required",
 		).Res()
 	}
+
+	stockValue := 0
+	productStock, exists := form.Value["product_stock"]
+	if !exists || len(productStock[0]) == 0 {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(AddProductErr),
+			"product_stock is required",
+		).Res()
+	}
+	// convert to int and check if it's 0 then stock is 0
+	stock, err := strconv.Atoi(productStock[0])
+	if err != nil {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(AddProductErr),
+			"invalid product stock",
+		).Res()
+	}
+	if stock < 0 {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(AddProductErr),
+			"product stock must be greater than 0",
+		).Res()
+	}
+	stockValue = stock
+
 	images, exists := form.File["images"]
 	if !exists || len(images) == 0 {
 		return entities.NewResponse(c).Error(
@@ -213,6 +241,7 @@ func (h *productHandler) AddProduct(c *fiber.Ctx) error {
 		ProductSize:     productSize[0],
 		ProductSex:      productSex[0],
 		ProductCategory: productCategory[0],
+		ProductStock:    stockValue,
 		Images:          img,
 	}
 
@@ -329,6 +358,33 @@ func (h *productHandler) UpdateProduct(c *fiber.Ctx) error {
 		productCategory = values[0]
 	}
 
+	stockValue := 0
+	productStock, exists := form.Value["product_stock"]
+	if !exists || len(productStock[0]) == 0 {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(AddProductErr),
+			"product_stock is required",
+		).Res()
+	}
+	// convert to int and check if it's 0 then stock is 0
+	stock, err := strconv.Atoi(productStock[0])
+	if err != nil {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(AddProductErr),
+			"invalid product stock",
+		).Res()
+	}
+	if stock < 0 {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(AddProductErr),
+			"product stock must be greater than 0",
+		).Res()
+	}
+	stockValue = stock
+
 	imagesRes := make([]*files.FileRes, len(form.File["images"]))
 	if images, exists := form.File["images"]; exists {
 		// files ext validation
@@ -394,6 +450,7 @@ func (h *productHandler) UpdateProduct(c *fiber.Ctx) error {
 		ProductSize:     productSize,
 		ProductSex:      productSex,
 		ProductCategory: productCategory,
+		ProductStock:    stockValue,
 		Images:          imagesRes,
 	}
 

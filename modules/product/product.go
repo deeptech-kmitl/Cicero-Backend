@@ -14,6 +14,7 @@ type Product struct {
 	ProductSex      string               `db:"product_sex" json:"product_sex" form:"product_sex"`
 	ProductDesc     string               `db:"product_desc" json:"product_desc" form:"product_desc"`
 	ProductCategory string               `db:"product_category" json:"product_category" form:"product_category"`
+	ProductStock    int                  `db:"product_stock" json:"product_stock" form:"product_stock"`
 	Images          []*entities.ImageRes `json:"images" form:"images"`
 }
 
@@ -26,6 +27,7 @@ type AddProduct struct {
 	ProductSex      string           `db:"product_sex" json:"product_sex" form:"product_sex"`
 	ProductDesc     string           `db:"product_desc" json:"product_desc" form:"product_desc"`
 	ProductCategory string           `db:"product_category" json:"product_category" form:"product_category"`
+	ProductStock    int              `db:"product_stock" json:"product_stock" form:"product_stock"`
 	Images          []*files.FileRes `json:"images" form:"images"`
 }
 
@@ -45,5 +47,6 @@ type UpdateProduct struct {
 	ProductSex      string           `db:"product_sex" json:"product_sex" form:"product_sex"`
 	ProductDesc     string           `db:"product_desc" json:"product_desc" form:"product_desc"`
 	ProductCategory string           `db:"product_category" json:"product_category" form:"product_category"`
+	ProductStock    int              `db:"product_stock" json:"product_stock" form:"product_stock"`
 	Images          []*files.FileRes `json:"images" form:"images"`
 }

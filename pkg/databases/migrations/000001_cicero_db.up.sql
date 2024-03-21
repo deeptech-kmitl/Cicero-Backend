@@ -64,6 +64,7 @@ CREATE TABLE "Product" (
   "product_desc" VARCHAR NOT NULL,
   "product_size" VARCHAR NOT NULL,
   "product_category" VARCHAR NOT NULL,
+  "product_stock" INT NOT NULL DEFAULT 0,
   "created_at" TIMESTAMP NOT NULL DEFAULT now(),
   "updated_at" TIMESTAMP NOT NULL DEFAULT now()
 );
