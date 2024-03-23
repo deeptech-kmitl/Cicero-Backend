@@ -23,7 +23,7 @@ type IFindProductBuilder interface {
 	paginate()
 	closeJsonQuery()
 	resetQuery()
-	Result() []*product.GetAllProduct
+	Result() []*product.Product
 	Count() int
 	PrintQuery()
 }
@@ -164,21 +164,21 @@ func (b *findProductBuilder) resetQuery() {
 	b.values = make([]any, 0)
 	b.lastStackIndex = 0
 }
-func (b *findProductBuilder) Result() []*product.GetAllProduct {
+func (b *findProductBuilder) Result() []*product.Product {
 	_, cancel := context.WithTimeout(context.Background(), time.Second*15)
 	defer cancel()
 
 	bytes := make([]byte, 0)
-	productsData := make([]*product.GetAllProduct, 0)
+	productsData := make([]*product.Product, 0)
 
 	if err := b.db.Get(&bytes, b.query, b.values...); err != nil {
 		log.Printf("find products failed: %v\n", err)
-		return make([]*product.GetAllProduct, 0)
+		return make([]*product.Product, 0)
 	}
 
 	if err := json.Unmarshal(bytes, &productsData); err != nil {
 		log.Printf("unmarshal products failed: %v\n", err)
-		return make([]*product.GetAllProduct, 0)
+		return make([]*product.Product, 0)
 	}
 	b.resetQuery()
 	return productsData

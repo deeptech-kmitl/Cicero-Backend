@@ -16,6 +16,7 @@ type IProductUsecase interface {
 	FindProduct(req *product.ProductFilter) *entities.PaginateRes
 	UpdateProduct(req *product.UpdateProduct) (*product.Product, error)
 	FindImageByProductId(productId string) ([]*entities.ImageRes, error)
+	GetAllProduct() []*product.GetAllProduct
 }
 
 type productUsecase struct {
@@ -94,4 +95,9 @@ func (u *productUsecase) FindImageByProductId(productId string) ([]*entities.Ima
 		return nil, err
 	}
 	return result, nil
+}
+
+func (u *productUsecase) GetAllProduct() []*product.GetAllProduct {
+	result := u.productsRepository.GetAllProduct()
+	return result
 }

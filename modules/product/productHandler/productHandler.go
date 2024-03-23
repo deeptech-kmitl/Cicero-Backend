@@ -28,6 +28,7 @@ const (
 	FindImageByProductIdErr productHandlerErrCode = "product-006"
 	DeleteImageProductErr   productHandlerErrCode = "product-007"
 	InsertImageProductErr   productHandlerErrCode = "product-008"
+	GetAllProductErr        productHandlerErrCode = "product-009"
 )
 
 type IProductHandler interface {
@@ -37,6 +38,7 @@ type IProductHandler interface {
 	FindProduct(c *fiber.Ctx) error
 	UpdateProduct(c *fiber.Ctx) error
 	FindImageByProductId(c *fiber.Ctx) error
+	GetAllProduct(c *fiber.Ctx) error
 }
 
 type productHandler struct {
@@ -477,5 +479,10 @@ func (h *productHandler) FindImageByProductId(c *fiber.Ctx) error {
 			err.Error(),
 		).Res()
 	}
+	return entities.NewResponse(c).Success(fiber.StatusOK, result).Res()
+}
+
+func (h *productHandler) GetAllProduct(c *fiber.Ctx) error {
+	result := h.productUsecase.GetAllProduct()
 	return entities.NewResponse(c).Success(fiber.StatusOK, result).Res()
 }

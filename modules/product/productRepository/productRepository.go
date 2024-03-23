@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/deeptech-kmitl/Cicero-Backend/config"
@@ -18,9 +19,10 @@ type IProductRepository interface {
 	FindOneProduct(prodId string) (*product.Product, error)
 	InsertProduct(req *product.AddProduct) (*product.Product, error)
 	DeleteProduct(productId string) error
-	FindProduct(req *product.ProductFilter) ([]*product.GetAllProduct, int)
+	FindProduct(req *product.ProductFilter) ([]*product.Product, int)
 	UpdateProduct(req *product.UpdateProduct) (*product.Product, error)
 	FindImageByProductId(productId string) ([]*entities.ImageRes, error)
+	GetAllProduct() []*product.GetAllProduct
 }
 
 type productRepository struct {
@@ -134,7 +136,7 @@ func (r *productRepository) DeleteProduct(productId string) error {
 	return nil
 }
 
-func (r *productRepository) FindProduct(req *product.ProductFilter) ([]*product.GetAllProduct, int) {
+func (r *productRepository) FindProduct(req *product.ProductFilter) ([]*product.Product, int) {
 	builder := productPattern.FindProductBuilder(r.db, req)
 	engineer := productPattern.FindProductEngineer(builder)
 
@@ -160,4 +162,53 @@ func (r *productRepository) FindImageByProductId(productId string) ([]*entities.
 		return nil, fmt.Errorf("find images failed: %v", err)
 	}
 	return images, nil
+}
+
+func (r *productRepository) GetAllProduct() []*product.GetAllProduct {
+	query := `
+	SELECT
+                array_to_json(array_agg("t"))
+        FROM (
+                SELECT
+                        MAX("p"."id") AS "id",
+                        "p"."product_title",
+                        MAX("p"."product_desc") AS "product_desc",
+                        MAX("p"."product_price") AS "product_price",
+                        MAX("p"."product_color") AS "product_color",
+                        jsonb_agg(DISTINCT "p"."product_size") AS "product_size",
+                        MAX("p"."product_sex") AS "product_sex",
+                        MAX("p"."product_category") AS "product_category",
+                        MAX("p"."product_stock") AS "product_stock",
+                        (
+                                SELECT
+                                        COALESCE(array_to_json(array_agg("it")), '[]'::json)
+                                FROM (
+                                        SELECT
+                                                "i"."id",
+                                                "i"."filename",
+                                                "i"."url"
+                                        FROM "Image" "i"
+                                        WHERE "i"."product_id" = MAX("p"."id")
+                                ) AS "it"
+                        ) AS "images"
+                FROM "Product" "p"
+                WHERE 1 = 1
+                GROUP BY "p"."product_title"
+        ) AS "t";`
+
+	bytes := make([]byte, 0)
+	productsData := make([]*product.GetAllProduct, 0)
+
+	if err := r.db.Get(&bytes, query); err != nil {
+		log.Printf("find products failed: %v\n", err)
+		return make([]*product.GetAllProduct, 0)
+	}
+
+	if err := json.Unmarshal(bytes, &productsData); err != nil {
+		log.Printf("unmarshal products failed: %v\n", err)
+		return make([]*product.GetAllProduct, 0)
+	}
+
+	return productsData
+
 }
