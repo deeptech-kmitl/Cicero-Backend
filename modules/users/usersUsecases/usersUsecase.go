@@ -95,6 +95,7 @@ func (u *userUsecase) GetPassport(req *users.UserCredential) (*users.UserPasspor
 			Phone:     user.Phone,
 			RoleId:    user.RoleId,
 			Dob:       user.Dob,
+			Avatar:    user.Avatar,
 		},
 		Token: &users.UserToken{
 			AccessToken: accessToken.SignToken(),

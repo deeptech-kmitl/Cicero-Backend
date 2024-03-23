@@ -76,6 +76,7 @@ func (r *usersRepository) FindOneUserByEmail(email string) (*users.UserCredentia
 		"lname",
 		"phone",
 		"dob",
+		"avatar",
 		"role_id"
 	FROM "User"
 	WHERE "email" = $1;`

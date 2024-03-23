@@ -45,6 +45,7 @@ type UserCredentialCheck struct {
 	LastName  string `db:"lname" json:"lname" form:"lname"`
 	Phone     string `db:"phone" json:"phone" form:"phone"`
 	Dob       string `db:"dob" json:"dob" form:"dob"`
+	Avatar    string `db:"avatar" json:"avatar"`
 	RoleId    int    `db:"role_id" json:"role_id"`
 }
 
