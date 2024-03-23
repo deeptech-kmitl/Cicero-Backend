@@ -52,15 +52,15 @@ func (b *findProductBuilder) initQuery() {
 
 	b.query += `
 		SELECT
-			MAX("p"."id") AS "id",
+			"p"."id",
 			"p"."product_title",
-			MAX("p"."product_desc") AS "product_desc",
-			MAX("p"."product_price") AS "product_price",
-			MAX("p"."product_color") AS "product_color",
-			jsonb_agg(DISTINCT "p"."product_size") AS "product_size",
-			MAX("p"."product_sex") AS "product_sex",
-			MAX("p"."product_category") AS "product_category",
-			MAX("p"."product_stock") AS "product_stock",
+			"p"."product_desc",
+			"p"."product_price",
+			"p"."product_color",
+			"p"."product_size",
+			"p"."product_sex",
+			"p"."product_category",
+			"p"."product_stock",
 			(
 				SELECT
 					COALESCE(array_to_json(array_agg("it")), '[]'::json)
@@ -70,7 +70,7 @@ func (b *findProductBuilder) initQuery() {
 						"i"."filename",
 						"i"."url"
 					FROM "Image" "i"
-					WHERE "i"."product_id" = MAX("p"."id")
+					WHERE "i"."product_id" = "p"."id"
 				) AS "it"
 			) AS "images"
 		FROM "Product" "p"
@@ -89,10 +89,10 @@ func (b *findProductBuilder) whereQuery() {
 
 	// Id check
 	if b.req.Id != "" {
-		b.values = append(b.values, b.req.Id)
+		b.values = append(b.values, "%"+strings.ToLower(b.req.Id)+"%")
 
 		queryWhereStack = append(queryWhereStack, `
-		AND "p"."id" = ?`)
+		AND (LOWER("p"."id") LIKE ?)`)
 	}
 
 	// Search check
@@ -145,7 +145,6 @@ func (b *findProductBuilder) sort() {
 	}
 
 	b.query += fmt.Sprintf(`
-		GROUP BY "p"."product_title"
         ORDER BY %s %s`, b.req.OrderBy, b.req.Sort)
 }
 func (b *findProductBuilder) paginate() {
