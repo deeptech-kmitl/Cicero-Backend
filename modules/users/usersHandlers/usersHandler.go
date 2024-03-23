@@ -266,6 +266,10 @@ func (h *usersHandler) UpdateUserProfile(c *fiber.Ctx) error {
 	if values, exists := form.Value["phone"]; exists && len(values) > 0 {
 		phone = values[0]
 	}
+	dob := ""
+	if values, exists := form.Value["dob"]; exists && len(values) > 0 {
+		dob = values[0]
+	}
 
 	// avatar := make([]*multipart.FileHeader, 0)
 	avatarUrl := ""
@@ -332,6 +336,7 @@ func (h *usersHandler) UpdateUserProfile(c *fiber.Ctx) error {
 		LastName:  lastName,
 		Email:     email,
 		Phone:     phone,
+		Dob:       dob,
 	}
 
 	res, err := h.userUsecase.UpdateUserProfile(req)
