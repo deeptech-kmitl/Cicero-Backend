@@ -31,3 +31,11 @@ type PaymentDetail struct {
 	Expired    string `json:"expired"`
 	Cvv        string `json:"cvv"`
 }
+
+type GetOrderByUserId struct {
+	Id       string         `json:"id" form:"id" db:"id"`
+	UserId   string         `json:"user_id" form:"user_id" db:"user_id"`
+	Total    float64        `json:"total" form:"total" db:"total"`
+	Status   string         `json:"status" form:"status" db:"status"`
+	Products *OrderProducts `json:"products" form:"products"`
+}

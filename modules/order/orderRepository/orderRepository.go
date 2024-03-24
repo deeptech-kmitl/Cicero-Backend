@@ -2,6 +2,7 @@ package orderRepository
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 
 type IOrderRepository interface {
 	AddOrder(req *order.AddOrderReq, products *order.OrderProducts) error
+	GetOrderByUserId(userId string) (*order.GetOrderByUserId, error)
 }
 
 type orderRepository struct {
@@ -62,4 +64,37 @@ func (r *orderRepository) AddOrder(req *order.AddOrderReq, products *order.Order
 		return fmt.Errorf("commit add order failed: %v", err)
 	}
 	return nil
+}
+
+func (r *orderRepository) GetOrderByUserId(userId string) (*order.GetOrderByUserId, error) {
+	// ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	// defer cancel()
+
+	query := `
+	SELECT
+    	to_jsonb("t")
+	FROM 
+	(
+    SELECT
+        "o"."id",
+        "o"."user_id",
+        "o"."total",
+        "o"."status",
+        "o"."products"
+    FROM "Order" "o"
+    WHERE "o"."user_id" = $1
+	) AS "t";`
+
+	bytes := make([]byte, 0)
+	order := new(order.GetOrderByUserId)
+
+	if err := r.db.Get(&bytes, query, userId); err != nil {
+		return nil, fmt.Errorf("cannot get order by user id: %w", err)
+	}
+
+	if err := json.Unmarshal(bytes, &order); err != nil {
+		return nil, fmt.Errorf("unmarshal order failed: %v", err)
+	}
+
+	return order, nil
 }
