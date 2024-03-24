@@ -1,6 +1,7 @@
 package middlewareHandler
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/deeptech-kmitl/Cicero-Backend/config"
@@ -110,6 +111,7 @@ func (h *middlewaresHandler) JwtAuth() fiber.Handler {
 func (h *middlewaresHandler) ParamsCheck() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		userId := c.Locals("userId")
+		fmt.Println(userId, c.Params("user_id"))
 		if c.Locals("userRoleId").(int) == 2 {
 			return c.Next()
 		}
