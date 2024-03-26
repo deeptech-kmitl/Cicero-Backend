@@ -82,7 +82,12 @@ func (r *productRepository) FindOneProduct(prodId string) (*product.Product, err
 		Images: make([]*entities.ImageRes, 0), //เวลาสร้าง struct ใหม่ แล้วข้างในมี array ให้ make array ไว้เลยเพื่อป้องกัน null pointer
 	}
 	if err := r.db.Get(&productBytes, query, prodId); err != nil {
-		return nil, fmt.Errorf("get product failed: %v", err)
+		switch err.Error() {
+		case "sql: no rows in result set":
+			return nil, fmt.Errorf("product not found: %v", err)
+		default:
+			return nil, fmt.Errorf("get product failed: %v", err)
+		}
 	}
 	if err := json.Unmarshal(productBytes, &product); err != nil {
 		return nil, fmt.Errorf("unmarshal product failed: %v", err)

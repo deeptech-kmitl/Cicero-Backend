@@ -18,7 +18,7 @@ INSERT INTO "User" (
     "dob"
 ) 
 VALUES
-    ('admmin', 'JAAA', 2, 'admin@gmail.com', '$2a$10$qS6yyjwgkcsgUsa9o1ZiTeHcAXDbJC7QVpE8c/kpc8dHIRl6iBO/m', '1234567890', 'avatar_url', '1990-01-01');
+    ('admmin', 'JAAA', 2, 'admin@gmail.com', '$2a$10$qS6yyjwgkcsgUsa9o1ZiTeHcAXDbJC7QVpE8c/kpc8dHIRl6iBO/m', '1234567890', 'https://storage.googleapis.com/cicero-bucket-prod/user.jpg', '1990-01-01');
 
 
 INSERT INTO "Product" ("product_title", "product_price", "product_color", "product_sex", "product_desc", "product_size", "product_category")

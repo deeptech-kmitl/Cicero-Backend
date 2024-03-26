@@ -29,7 +29,7 @@ CREATE TABLE "User" (
   "email" VARCHAR UNIQUE NOT NULL,
   "password" VARCHAR NOT NULL,
   "phone" VARCHAR NOT NULL UNIQUE,
-  "avatar" VARCHAR DEFAULT 'https://www.seekpng.com/png/detail/41-410093_circled-user-icon-user-profile-icon-png.png',
+  "avatar" VARCHAR DEFAULT 'https://storage.googleapis.com/cicero-bucket-prod/user.jpg',
   "dob" VARCHAR NOT NULL,
   "created_at" TIMESTAMP NOT NULL DEFAULT now(),
   "updated_at" TIMESTAMP NOT NULL DEFAULT now()
