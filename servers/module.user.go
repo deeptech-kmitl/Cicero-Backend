@@ -46,10 +46,10 @@ func (m *userModule) Init() {
 	router.Post("/:user_id/wishlist/:product_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.Wishlist)
 	router.Get("/wishlist/:user_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.GetWishlist)
 	router.Post("/cart/:user_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.AddCart)
-	router.Delete("/cart/:user_id/:product_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.RemoveCart)
+	router.Delete("/cart/:user_id/:cart_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.RemoveCart)
 	router.Get("/cart/:user_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.GetCart)
-	router.Patch("/cart/qtyPlus/:user_id/:product_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.IncreaseQtyCart)
-	router.Patch("/cart/qtyMinus/:user_id/:product_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.DecreaseQtyCart)
+	router.Patch("/cart/qtyPlus/:user_id/:cart_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.IncreaseQtyCart)
+	router.Patch("/cart/qtyMinus/:user_id/:cart_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.DecreaseQtyCart)
 	router.Patch("/cart/size/:user_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.handler.UpdateSizeCart)
 }
 

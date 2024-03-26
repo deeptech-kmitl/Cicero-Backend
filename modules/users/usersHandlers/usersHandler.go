@@ -409,9 +409,9 @@ func (h *usersHandler) AddCart(c *fiber.Ctx) error {
 
 func (h *usersHandler) RemoveCart(c *fiber.Ctx) error {
 	userId := strings.Trim(c.Params("user_id"), " ")
-	prodId := strings.Trim(c.Params("product_id"), " ")
+	cartId := strings.Trim(c.Params("cart_id"), " ")
 
-	result, err := h.userUsecase.RemoveCart(userId, prodId)
+	result, err := h.userUsecase.RemoveCart(userId, cartId)
 	if err != nil {
 		return entities.NewResponse(c).Error(
 			fiber.ErrBadRequest.Code,
@@ -440,9 +440,9 @@ func (h *usersHandler) GetCart(c *fiber.Ctx) error {
 
 func (h *usersHandler) DecreaseQtyCart(c *fiber.Ctx) error {
 	userId := strings.Trim(c.Params("user_id"), " ")
-	prodId := strings.Trim(c.Params("product_id"), " ")
+	cartId := strings.Trim(c.Params("cart_id"), " ")
 
-	qty, err := h.userUsecase.DecreaseQtyCart(userId, prodId)
+	qty, err := h.userUsecase.DecreaseQtyCart(userId, cartId)
 	if err != nil {
 		return entities.NewResponse(c).Error(
 			fiber.ErrBadRequest.Code,
@@ -456,9 +456,9 @@ func (h *usersHandler) DecreaseQtyCart(c *fiber.Ctx) error {
 
 func (h *usersHandler) IncreaseQtyCart(c *fiber.Ctx) error {
 	userId := strings.Trim(c.Params("user_id"), " ")
-	prodId := strings.Trim(c.Params("product_id"), " ")
+	cartId := strings.Trim(c.Params("cart_id"), " ")
 
-	qty, err := h.userUsecase.IncreaseQtyCart(userId, prodId)
+	qty, err := h.userUsecase.IncreaseQtyCart(userId, cartId)
 	if err != nil {
 		return entities.NewResponse(c).Error(
 			fiber.ErrBadRequest.Code,

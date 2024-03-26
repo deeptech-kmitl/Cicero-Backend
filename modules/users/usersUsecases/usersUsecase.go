@@ -20,10 +20,10 @@ type IUserUsecase interface {
 	Wishlist(userId, prodId string) (string, error)
 	GetWishlist(userId string) (*users.WishlistRes, error)
 	AddCart(req *users.AddCartReq) (string, error)
-	RemoveCart(userId, prodId string) (string, error)
+	RemoveCart(userId, cartId string) (string, error)
 	GetCart(userId string) ([]*users.Cart, error)
-	DecreaseQtyCart(userId, prodId string) (int, error)
-	IncreaseQtyCart(userId, prodId string) (int, error)
+	DecreaseQtyCart(userId, cartId string) (int, error)
+	IncreaseQtyCart(userId, cartId string) (int, error)
 	UpdateSizeCart(req *users.UpdateSizeReq) (string, error)
 }
 
@@ -192,8 +192,8 @@ func (u *userUsecase) AddCart(req *users.AddCartReq) (string, error) {
 	return result, nil
 }
 
-func (u *userUsecase) RemoveCart(userId, prodId string) (string, error) {
-	if err := u.usersRepository.RemoveCart(userId, prodId); err != nil {
+func (u *userUsecase) RemoveCart(userId, cartId string) (string, error) {
+	if err := u.usersRepository.RemoveCart(userId, cartId); err != nil {
 		return "", err
 	}
 	return "removed", nil
@@ -207,15 +207,15 @@ func (u *userUsecase) GetCart(userId string) ([]*users.Cart, error) {
 	return result, nil
 }
 
-func (u *userUsecase) DecreaseQtyCart(userId, prodId string) (int, error) {
+func (u *userUsecase) DecreaseQtyCart(userId, cartId string) (int, error) {
 
-	qty, err := u.usersRepository.DecreaseQtyCart(userId, prodId)
+	qty, err := u.usersRepository.DecreaseQtyCart(userId, cartId)
 	if err != nil {
 		return 0, err
 	}
 
 	if qty <= 0 {
-		if err := u.usersRepository.RemoveCart(userId, prodId); err != nil {
+		if err := u.usersRepository.RemoveCart(userId, cartId); err != nil {
 			return 0, err
 		}
 	}
@@ -223,9 +223,9 @@ func (u *userUsecase) DecreaseQtyCart(userId, prodId string) (int, error) {
 	return qty, nil
 }
 
-func (u *userUsecase) IncreaseQtyCart(userId, prodId string) (int, error) {
+func (u *userUsecase) IncreaseQtyCart(userId, cartId string) (int, error) {
 
-	qty, err := u.usersRepository.IncreaseQtyCart(userId, prodId)
+	qty, err := u.usersRepository.IncreaseQtyCart(userId, cartId)
 	if err != nil {
 		return 0, err
 	}

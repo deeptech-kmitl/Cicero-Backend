@@ -26,10 +26,10 @@ type IUsersRepository interface {
 	CheckCart(userId, prodId, size string) (bool, error)
 	AddCart(req *users.AddCartReq) error
 	AddCartAgain(req *users.AddCartReq) error
-	RemoveCart(userId, prodId string) error
+	RemoveCart(userId, cartId string) error
 	FindCart(userId string) ([]*users.Cart, error)
-	DecreaseQtyCart(userId, prodId string) (int, error)
-	IncreaseQtyCart(userId, prodId string) (int, error)
+	DecreaseQtyCart(userId, cartId string) (int, error)
+	IncreaseQtyCart(userId, cartId string) (int, error)
 	UpdateSizeCart(req *users.UpdateSizeReq) (string, error)
 }
 
@@ -353,17 +353,34 @@ func (r *usersRepository) AddCart(req *users.AddCartReq) error {
 	return nil
 }
 
-func (r *usersRepository) RemoveCart(userId, prodId string) error {
+func (r *usersRepository) RemoveCart(userId, cartId string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	query := `
-	DELETE FROM "Cart"
-	WHERE "user_id" = $1
-	AND "product_id" = $2
+	//check user id is same in db
+	queryCheck := `
+	SELECT
+		(CASE WHEN COUNT(*) = 1 THEN TRUE ELSE FALSE END)
+	FROM "Cart"
+	WHERE "id" = $1
+	AND "user_id" = $2;
 	`
 
-	if _, err := r.db.ExecContext(ctx, query, userId, prodId); err != nil {
+	var check bool
+	if err := r.db.Get(&check, queryCheck, cartId, userId); err != nil {
+		return fmt.Errorf("check cart failed: %v", err)
+	}
+
+	if !check {
+		return fmt.Errorf("no permission to remove cart")
+	}
+
+	query := `
+	DELETE FROM "Cart"
+	WHERE "id" = $1;
+	`
+
+	if _, err := r.db.ExecContext(ctx, query, cartId); err != nil {
 		return fmt.Errorf("remove cart failed: %v", err)
 	}
 	return nil
@@ -409,6 +426,7 @@ func (r *usersRepository) FindCart(userId string) ([]*users.Cart, error) {
 		COALESCE(array_to_json(array_agg("cart")), '[]'::json)
 	FROM (
 		SELECT
+			"c"."id" AS "cart_id",
 			"p"."id",
 			"p"."product_title",
 			"p"."product_price",
@@ -463,20 +481,22 @@ func (r *usersRepository) FindCart(userId string) ([]*users.Cart, error) {
 
 // }
 
-func (r *usersRepository) DecreaseQtyCart(userId, prodId string) (int, error) {
+func (r *usersRepository) DecreaseQtyCart(userId, cartId string) (int, error) {
 	query := `
 	UPDATE "Cart"
 	SET "qty" = "qty" - 1
 	WHERE "user_id" = $1
-	AND "product_id" = $2
+	AND "id" = $2
 	RETURNING "qty";
 	`
 
+	fmt.Println("cartId", cartId)
+
 	var qty int
-	if err := r.db.Get(&qty, query, userId, prodId); err != nil {
+	if err := r.db.Get(&qty, query, userId, cartId); err != nil {
 		switch err.Error() {
 		case "sql: no rows in result set":
-			return 0, fmt.Errorf("cart not found")
+			return 0, fmt.Errorf("no permission to decrease qty cart")
 		default:
 			return 0, fmt.Errorf("decrease qty cart failed: %v", err)
 		}
@@ -485,20 +505,20 @@ func (r *usersRepository) DecreaseQtyCart(userId, prodId string) (int, error) {
 
 }
 
-func (r *usersRepository) IncreaseQtyCart(userId, prodId string) (int, error) {
+func (r *usersRepository) IncreaseQtyCart(userId, cartId string) (int, error) {
 	query := `
 	UPDATE "Cart"
 	SET "qty" = "qty" + 1
 	WHERE "user_id" = $1
-	AND "product_id" = $2
+	AND "id" = $2
 	RETURNING "qty";
 	`
 
 	var qty int
-	if err := r.db.Get(&qty, query, userId, prodId); err != nil {
+	if err := r.db.Get(&qty, query, userId, cartId); err != nil {
 		switch err.Error() {
 		case "sql: no rows in result set":
-			return 0, fmt.Errorf("cart not found")
+			return 0, fmt.Errorf("no permission to increase qty cart")
 		default:
 			return 0, fmt.Errorf("increase qty cart failed: %v", err)
 		}
@@ -512,15 +532,15 @@ func (r *usersRepository) UpdateSizeCart(req *users.UpdateSizeReq) (string, erro
 	UPDATE "Cart"
 	SET "size" = $1
 	WHERE "user_id" = $2
-	AND "product_id" = $3
+	AND "id" = $3
 	RETURNING "size";
 	`
 
 	var size string
-	if err := r.db.Get(&size, query, req.Size, req.UserId, req.ProductId); err != nil {
+	if err := r.db.Get(&size, query, req.Size, req.UserId, req.CartId); err != nil {
 		switch err.Error() {
 		case "sql: no rows in result set":
-			return "", fmt.Errorf("cart not found")
+			return "", fmt.Errorf("no permission to update size")
 		default:
 			return "", fmt.Errorf("update size cart failed: %v", err)
 		}

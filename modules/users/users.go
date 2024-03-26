@@ -125,6 +125,7 @@ type AddCartReq struct {
 }
 
 type Cart struct {
+	CartId       string               `db:"cart_id" json:"cart_id"`
 	Id           string               `db:"id" json:"id"`
 	Size         string               `db:"size" json:"size"`
 	Qty          int                  `db:"qty" json:"qty"`
@@ -135,7 +136,7 @@ type Cart struct {
 }
 
 type UpdateSizeReq struct {
-	UserId    string `json:"user_id" form:"user_id"`
-	ProductId string `json:"product_id" form:"product_id"`
-	Size      string `json:"size" form:"size"`
+	UserId string `json:"user_id" form:"user_id"`
+	CartId string `json:"cart_id" form:"cart_id"`
+	Size   string `json:"size" form:"size"`
 }
