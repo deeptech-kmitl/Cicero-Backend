@@ -57,14 +57,7 @@ func (h *orderHandler) GetOrderByUserId(c *fiber.Ctx) error {
 	userId := strings.TrimSpace(c.Params("user_id"))
 
 	//get order by user id
-	order, err := h.orderUsecase.GetOrderByUserId(userId)
-	if err != nil {
-		return entities.NewResponse(c).Error(
-			fiber.ErrBadRequest.Code,
-			string(getOrderByUserIdErr),
-			err.Error(),
-		).Res()
-	}
+	order := h.orderUsecase.GetOrderByUserId(userId)
 
 	return entities.NewResponse(c).Success(fiber.StatusOK, order).Res()
 }

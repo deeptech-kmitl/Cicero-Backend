@@ -12,7 +12,7 @@ import (
 
 type IOrderRepository interface {
 	AddOrder(req *order.AddOrderReq, products *order.OrderProducts) error
-	GetOrderByUserId(userId string) (*order.GetOrderByUserId, error)
+	GetOrderByUserId(userId string) []*order.GetOrderByUserId
 }
 
 type orderRepository struct {
@@ -66,13 +66,13 @@ func (r *orderRepository) AddOrder(req *order.AddOrderReq, products *order.Order
 	return nil
 }
 
-func (r *orderRepository) GetOrderByUserId(userId string) (*order.GetOrderByUserId, error) {
+func (r *orderRepository) GetOrderByUserId(userId string) []*order.GetOrderByUserId {
 	// ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	// defer cancel()
 
 	query := `
 	SELECT
-    	to_jsonb("t")
+		COALESCE(array_to_json(array_agg("t")), '[]'::json)
 	FROM 
 	(
     SELECT
@@ -86,15 +86,15 @@ func (r *orderRepository) GetOrderByUserId(userId string) (*order.GetOrderByUser
 	) AS "t";`
 
 	bytes := make([]byte, 0)
-	order := new(order.GetOrderByUserId)
+	orderData := make([]*order.GetOrderByUserId, 0)
 
 	if err := r.db.Get(&bytes, query, userId); err != nil {
-		return nil, fmt.Errorf("cannot get order by user id: %w", err)
+		return make([]*order.GetOrderByUserId, 0)
 	}
 
-	if err := json.Unmarshal(bytes, &order); err != nil {
-		return nil, fmt.Errorf("unmarshal order failed: %v", err)
+	if err := json.Unmarshal(bytes, &orderData); err != nil {
+		return make([]*order.GetOrderByUserId, 0)
 	}
 
-	return order, nil
+	return orderData
 }
