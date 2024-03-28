@@ -11,7 +11,7 @@ import (
 )
 
 type IOrderRepository interface {
-	AddOrder(req *order.AddOrderReq, products *order.OrderProducts) error
+	AddOrder(req *order.AddOrderReq, products *order.OrderProducts) (string, error)
 	GetOrderByUserId(userId string) []*order.GetOrderByUserId
 	GetOneOrderById(orderId string) (*order.GetOneOrderById, error)
 }
@@ -24,13 +24,13 @@ func OrderRepository(db *sqlx.DB) IOrderRepository {
 	return &orderRepository{db}
 }
 
-func (r *orderRepository) AddOrder(req *order.AddOrderReq, products *order.OrderProducts) error {
+func (r *orderRepository) AddOrder(req *order.AddOrderReq, products *order.OrderProducts) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	tx, err := r.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return fmt.Errorf("begin transaction add order failed: %v", err)
+		return "", fmt.Errorf("begin transaction add order failed: %v", err)
 	}
 
 	query := `
@@ -42,12 +42,15 @@ func (r *orderRepository) AddOrder(req *order.AddOrderReq, products *order.Order
 		"address",
 		"payment_detail"
 	)
-	VALUES ($1, $2, $3, $4, $5, $6);
+	VALUES ($1, $2, $3, $4, $5, $6)
+	RETURNING "id";
 	`
 
-	if _, err := tx.ExecContext(ctx, query, req.UserId, req.Total, req.Status, products, req.Address, req.PaymentDetail); err != nil {
+	var orderId string
+
+	if err := tx.QueryRowxContext(ctx, query, req.UserId, req.Total, req.Status, products, req.Address, req.PaymentDetail).Scan(&orderId); err != nil {
 		tx.Rollback()
-		return fmt.Errorf("add order: %v", err)
+		return "", fmt.Errorf("add order: %v", err)
 	}
 
 	//delete all products in cart by user_id
@@ -58,13 +61,13 @@ func (r *orderRepository) AddOrder(req *order.AddOrderReq, products *order.Order
 
 	if _, err := tx.ExecContext(ctx, query, req.UserId); err != nil {
 		tx.Rollback()
-		return fmt.Errorf("delete all products in cart by user_id: %v", err)
+		return "", fmt.Errorf("delete all products in cart by user_id: %v", err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("commit add order failed: %v", err)
+		return "", fmt.Errorf("commit add order failed: %v", err)
 	}
-	return nil
+	return orderId, nil
 }
 
 func (r *orderRepository) GetOrderByUserId(userId string) []*order.GetOrderByUserId {

@@ -11,7 +11,7 @@ import (
 )
 
 type IOrderUsecase interface {
-	AddOrder(req *order.AddOrderReq) error
+	AddOrder(req *order.AddOrderReq) (string, error)
 	GetOrderByUserId(userId string) []*order.GetOrderByUserId
 	GetOneOrderById(orderId string) (*order.GetOneOrderById, error)
 }
@@ -28,15 +28,15 @@ func OrderUsecase(orderRepo orderRepository.IOrderRepository, userRepo usersRepo
 	}
 }
 
-func (u *orderUsecase) AddOrder(req *order.AddOrderReq) error {
+func (u *orderUsecase) AddOrder(req *order.AddOrderReq) (string, error) {
 
 	productsOrder, err := u.userUsecase.GetCart(req.UserId)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if len(productsOrder) == 0 {
-		return fmt.Errorf("cart is empty")
+		return "", fmt.Errorf("cart is empty")
 
 	}
 
@@ -46,11 +46,12 @@ func (u *orderUsecase) AddOrder(req *order.AddOrderReq) error {
 		Products: productsOrder,
 	}
 
-	if err := u.orderRepo.AddOrder(req, orders); err != nil {
-		return err
+	orderId, err := u.orderRepo.AddOrder(req, orders)
+	if err != nil {
+		return "", err
 	}
 
-	return nil
+	return orderId, nil
 }
 
 func (u *orderUsecase) GetOrderByUserId(userId string) []*order.GetOrderByUserId {

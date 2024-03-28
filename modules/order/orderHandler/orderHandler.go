@@ -44,7 +44,8 @@ func (h *orderHandler) AddOrder(c *fiber.Ctx) error {
 	}
 
 	//add order
-	if err := h.orderUsecase.AddOrder(req); err != nil {
+	orderId, err := h.orderUsecase.AddOrder(req)
+	if err != nil {
 		return entities.NewResponse(c).Error(
 			fiber.ErrBadRequest.Code,
 			string(addOrderErr),
@@ -52,7 +53,7 @@ func (h *orderHandler) AddOrder(c *fiber.Ctx) error {
 		).Res()
 	}
 
-	return entities.NewResponse(c).Success(fiber.StatusOK, "add order success").Res()
+	return entities.NewResponse(c).Success(fiber.StatusOK, orderId).Res()
 }
 
 func (h *orderHandler) GetOrderByUserId(c *fiber.Ctx) error {
