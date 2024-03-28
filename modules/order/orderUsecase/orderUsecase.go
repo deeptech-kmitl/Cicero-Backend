@@ -13,6 +13,7 @@ import (
 type IOrderUsecase interface {
 	AddOrder(req *order.AddOrderReq) error
 	GetOrderByUserId(userId string) []*order.GetOrderByUserId
+	GetOneOrderById(orderId string) (*order.GetOneOrderById, error)
 }
 
 type orderUsecase struct {
@@ -54,4 +55,8 @@ func (u *orderUsecase) AddOrder(req *order.AddOrderReq) error {
 
 func (u *orderUsecase) GetOrderByUserId(userId string) []*order.GetOrderByUserId {
 	return u.orderRepo.GetOrderByUserId(userId)
+}
+
+func (u *orderUsecase) GetOneOrderById(orderId string) (*order.GetOneOrderById, error) {
+	return u.orderRepo.GetOneOrderById(orderId)
 }

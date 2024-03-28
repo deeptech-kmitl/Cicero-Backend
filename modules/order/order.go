@@ -39,3 +39,14 @@ type GetOrderByUserId struct {
 	Status   string         `json:"status" form:"status" db:"status"`
 	Products *OrderProducts `json:"products" form:"products"`
 }
+
+type GetOneOrderById struct {
+	Id            string         `json:"id" form:"id" db:"id"`
+	UserId        string         `json:"user_id" form:"user_id" db:"user_id"`
+	Total         float64        `json:"total" form:"total" db:"total"`
+	Status        string         `json:"status" form:"status" db:"status"`
+	Products      *OrderProducts `json:"products" form:"products"`
+	Address       *Address       `json:"address" form:"address" db:"address"`
+	PaymentDetail *PaymentDetail `json:"payment_detail" form:"payment_detail" db:"payment_detail"`
+	CreatedAt     string         `json:"created_at" form:"created_at" db:"created_at"`
+}

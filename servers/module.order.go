@@ -39,6 +39,7 @@ func (m *orderModule) Init() {
 
 	router.Post("/", m.mid.JwtAuth(), m.mid.Authorize(1), m.handler.AddOrder)
 	router.Get("/:user_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), m.mid.Authorize(1), m.handler.GetOrderByUserId)
+	router.Get("/find/:order_id", m.mid.JwtAuth(), m.mid.Authorize(1, 2), m.handler.GetOneOrderById)
 
 }
 

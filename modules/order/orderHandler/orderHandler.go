@@ -14,11 +14,13 @@ type orderHandlerErrCode = string
 const (
 	addOrderErr         orderHandlerErrCode = "order-001"
 	getOrderByUserIdErr orderHandlerErrCode = "order-002"
+	getOneOrderByIdErr  orderHandlerErrCode = "order-003"
 )
 
 type IOrderHandler interface {
 	AddOrder(c *fiber.Ctx) error
 	GetOrderByUserId(c *fiber.Ctx) error
+	GetOneOrderById(c *fiber.Ctx) error
 }
 
 type orderHandler struct {
@@ -58,6 +60,22 @@ func (h *orderHandler) GetOrderByUserId(c *fiber.Ctx) error {
 
 	//get order by user id
 	order := h.orderUsecase.GetOrderByUserId(userId)
+
+	return entities.NewResponse(c).Success(fiber.StatusOK, order).Res()
+}
+
+func (h *orderHandler) GetOneOrderById(c *fiber.Ctx) error {
+	orderId := strings.TrimSpace(c.Params("order_id"))
+
+	//get order by order id
+	order, err := h.orderUsecase.GetOneOrderById(orderId)
+	if err != nil {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(getOneOrderByIdErr),
+			err.Error(),
+		).Res()
+	}
 
 	return entities.NewResponse(c).Success(fiber.StatusOK, order).Res()
 }
