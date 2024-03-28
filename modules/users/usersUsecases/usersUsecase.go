@@ -179,15 +179,17 @@ func (u *userUsecase) AddCart(req *users.AddCartReq) (string, error) {
 	}
 
 	if check {
-		if err := u.usersRepository.AddCartAgain(req); err != nil {
+		cartId, err := u.usersRepository.AddCartAgain(req)
+		if err != nil {
 			return "", err
 		}
-		result = "Added 1 More"
+		result = cartId
 	} else {
-		if err := u.usersRepository.AddCart(req); err != nil {
+		cartId, err := u.usersRepository.AddCart(req)
+		if err != nil {
 			return "", err
 		}
-		result = "Added"
+		result = cartId
 	}
 	return result, nil
 }

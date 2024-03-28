@@ -24,8 +24,8 @@ type IUsersRepository interface {
 	CheckWishlist(userId, prodId string) (bool, error)
 	FindWishlist(userId string) (*users.WishlistRes, error)
 	CheckCart(userId, prodId, size string) (bool, error)
-	AddCart(req *users.AddCartReq) error
-	AddCartAgain(req *users.AddCartReq) error
+	AddCart(req *users.AddCartReq) (string, error)
+	AddCartAgain(req *users.AddCartReq) (string, error)
 	RemoveCart(userId, cartId string) error
 	FindCart(userId string) ([]*users.Cart, error)
 	DecreaseQtyCart(userId, cartId string) (int, error)
@@ -328,7 +328,7 @@ func (r *usersRepository) FindWishlist(userId string) (*users.WishlistRes, error
 
 }
 
-func (r *usersRepository) AddCart(req *users.AddCartReq) error {
+func (r *usersRepository) AddCart(req *users.AddCartReq) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -338,19 +338,21 @@ func (r *usersRepository) AddCart(req *users.AddCartReq) error {
 		"product_id",
 		"size"
 	)
-	VALUES ($1, $2, $3);
+	VALUES ($1, $2, $3)
+	RETURNING "id";
 	`
 
-	if _, err := r.db.ExecContext(ctx, query, req.UserId, req.ProductId, req.Size); err != nil {
+	var cartId string
+	if err := r.db.QueryRowContext(ctx, query, req.UserId, req.ProductId, req.Size).Scan(&cartId); err != nil {
 		switch err.Error() {
 		case "ERROR: insert or update on table \"Cart\" violates foreign key constraint \"Cart_product_id_fkey\" (SQLSTATE 23503)":
-			return fmt.Errorf("product not found")
+			return "", fmt.Errorf("product not found")
 		default:
-			return fmt.Errorf("add cart failed: %v", err)
+			return "", fmt.Errorf("add cart failed: %v", err)
 		}
-
 	}
-	return nil
+
+	return cartId, nil
 }
 
 func (r *usersRepository) RemoveCart(userId, cartId string) error {
@@ -402,7 +404,7 @@ func (r *usersRepository) CheckCart(userId, prodId, size string) (bool, error) {
 	return check, nil
 }
 
-func (r *usersRepository) AddCartAgain(req *users.AddCartReq) error {
+func (r *usersRepository) AddCartAgain(req *users.AddCartReq) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -411,13 +413,22 @@ func (r *usersRepository) AddCartAgain(req *users.AddCartReq) error {
 	SET "qty" = "qty" + 1
 	WHERE "user_id" = $1
 	AND "product_id" = $2
-	AND "size" = $3;
+	AND "size" = $3
+	RETURNING "id";
 	`
-	if _, err := r.db.ExecContext(ctx, query, req.UserId, req.ProductId, req.Size); err != nil {
-		return fmt.Errorf("add cart again failed: %v", err)
+
+	var cartId string
+	if err := r.db.QueryRowContext(ctx, query, req.UserId, req.ProductId, req.Size).Scan(&cartId); err != nil {
+		switch err.Error() {
+		case "sql: no rows in result set":
+			return "", fmt.Errorf("no permission to add cart again")
+		default:
+			return "", fmt.Errorf("add cart again failed: %v", err)
+		}
+
 	}
 
-	return nil
+	return cartId, nil
 }
 
 func (r *usersRepository) FindCart(userId string) ([]*users.Cart, error) {
