@@ -16,6 +16,7 @@ type GetAllProduct struct {
 	ProductCategory string               `db:"product_category" json:"product_category" form:"product_category"`
 	ProductStock    int                  `db:"product_stock" json:"product_stock" form:"product_stock"`
 	Images          []*entities.ImageRes `json:"images" form:"images"`
+	CreatedAt       string               `db:"created_at" json:"created_at" form:"created_at"`
 }
 
 type Product struct {

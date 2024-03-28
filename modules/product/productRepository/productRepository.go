@@ -184,6 +184,7 @@ func (r *productRepository) GetAllProduct() []*product.GetAllProduct {
                         MAX("p"."product_sex") AS "product_sex",
                         MAX("p"."product_category") AS "product_category",
                         MAX("p"."product_stock") AS "product_stock",
+						MAX("p"."created_at") AS "created_at",
                         (
                                 SELECT
                                         COALESCE(array_to_json(array_agg("it")), '[]'::json)
